@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useData } from "../context/DataContext";
@@ -24,8 +24,14 @@ export default function WorkPackageDetail() {
   const { projectId, packageId } = useParams<{ projectId: string; packageId: string }>();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const { projects, packages } = useData();
+  const { projects, packages, loadProjects, loadPackages, loadPackageData } = useData();
   const [activeTab, setActiveTab] = useState<TabName>("Overview");
+
+  useEffect(() => {
+    loadProjects();
+    if (projectId) loadPackages(projectId);
+    if (packageId) loadPackageData(packageId);
+  }, [projectId, packageId]);
 
   const project = projects.find((p) => p.id === projectId);
   const pkg = packages.find((wp) => wp.id === packageId);

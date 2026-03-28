@@ -1,10 +1,11 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { auth as authApi, setToken, clearToken } from "../api";
 
 export interface UserCompany {
   id: string;
   name: string;
   role: string;
-  type: "client" | "contractor" | "independent";
+  type: string;
 }
 
 export interface AuthUser {
@@ -18,33 +19,22 @@ export interface AuthUser {
 interface AuthState {
   user: AuthUser | null;
   isAuthenticated: boolean;
-  login: (provider: "google" | "microsoft" | "email", email?: string) => void;
+  loading: boolean;
+  login: (provider: "google" | "microsoft" | "email", email: string, fullName?: string) => Promise<string>;
   logout: () => void;
-  setActiveCompany: (companyId: string) => void;
-  joinCompany: (companyName: string) => void;
-  createCompany: (companyName: string) => void;
-  createIndependentProfile: (displayName: string) => void;
+  setActiveCompany: (companyId: string) => Promise<void>;
+  createCompany: (name: string) => Promise<void>;
+  createIndependentProfile: (displayName: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthState | null>(null);
-
-// Mock user data matching the product doc's demo scenario
-const MOCK_USER: AuthUser = {
-  id: "u1",
-  email: "vindy@roteq.co.za",
-  fullName: "Vindy",
-  memberships: [
-    { id: "c1", name: "Roteq Engineering", role: "pm", type: "contractor" },
-    { id: "c2", name: "Glencore Ltd.", role: "viewer", type: "client" },
-  ],
-  activeCompanyId: "c1",
-};
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(() => {
     const saved = sessionStorage.getItem("hindtrail_user");
     return saved ? JSON.parse(saved) : null;
   });
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -54,66 +44,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user]);
 
-  const login = (_provider: "google" | "microsoft" | "email", _email?: string) => {
-    // Mock: simulate login returning a user with memberships
-    setUser(MOCK_USER);
+  const login = async (provider: "google" | "microsoft" | "email", email: string, fullName?: string): Promise<string> => {
+    setLoading(true);
+    try {
+      const res = await authApi.login(email, fullName || email.split("@")[0], provider);
+      setToken(res.token);
+      setUser({
+        id: res.user.id,
+        email: res.user.email,
+        fullName: res.user.fullName,
+        memberships: res.memberships,
+        activeCompanyId: res.activeCompanyId,
+      });
+      return res.next; // "workspace" | "onboarding" | "select_company"
+    } finally {
+      setLoading(false);
+    }
   };
 
   const logout = () => {
     setUser(null);
+    clearToken();
     sessionStorage.removeItem("hindtrail_user");
   };
 
-  const setActiveCompany = (companyId: string) => {
+  const setActiveCompany = async (companyId: string) => {
     if (!user) return;
-    const valid = user.memberships.find((m) => m.id === companyId);
-    if (valid) {
-      setUser({ ...user, activeCompanyId: companyId });
-    }
+    await authApi.setContext(companyId);
+    setUser({ ...user, activeCompanyId: companyId });
   };
 
-  const joinCompany = (companyName: string) => {
+  const createCompany = async (name: string) => {
     if (!user) return;
-    const newCompany: UserCompany = {
-      id: `c${Date.now()}`,
-      name: companyName,
-      role: "member",
-      type: "contractor",
-    };
+    const res = await authApi.createCompany(name);
+    const newCompany: UserCompany = { id: res.companyId, name, role: "admin", type: "contractor" };
     setUser({
       ...user,
       memberships: [...user.memberships, newCompany],
-      activeCompanyId: newCompany.id,
+      activeCompanyId: res.companyId,
     });
   };
 
-  const createCompany = (companyName: string) => {
+  const createIndependentProfile = async (displayName: string) => {
     if (!user) return;
-    const newCompany: UserCompany = {
-      id: `c${Date.now()}`,
-      name: companyName,
-      role: "admin",
-      type: "contractor",
-    };
-    setUser({
-      ...user,
-      memberships: [...user.memberships, newCompany],
-      activeCompanyId: newCompany.id,
-    });
-  };
-
-  const createIndependentProfile = (displayName: string) => {
-    if (!user) return;
-    const newCompany: UserCompany = {
-      id: `c${Date.now()}`,
-      name: `${displayName} (Independent)`,
-      role: "admin",
-      type: "independent",
-    };
+    const res = await authApi.createIndependent(displayName);
+    const newCompany: UserCompany = { id: res.companyId, name: `${displayName} (Independent)`, role: "admin", type: "independent" };
     setUser({
       ...user,
       memberships: [newCompany],
-      activeCompanyId: newCompany.id,
+      activeCompanyId: res.companyId,
     });
   };
 
@@ -122,10 +101,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         isAuthenticated: !!user,
+        loading,
         login,
         logout,
         setActiveCompany,
-        joinCompany,
         createCompany,
         createIndependentProfile,
       }}

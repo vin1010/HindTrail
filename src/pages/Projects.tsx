@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useData } from "../context/DataContext";
@@ -39,8 +39,10 @@ function ProjectCard({ project, onClick }: { project: Project; onClick: () => vo
 export default function Projects() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const { projects, addProject } = useData();
+  const { projects, addProject, loadProjects } = useData();
   const [search, setSearch] = useState("");
+
+  useEffect(() => { loadProjects(); }, []);
   const [showNew, setShowNew] = useState(false);
 
   // Form state
@@ -66,18 +68,19 @@ export default function Projects() {
     setFormLocation(""); setFormStart(""); setFormEnd(""); setFormDesc("");
   };
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!formName.trim() || !formCode.trim()) return;
-    const p = addProject({
+    const p = await addProject({
       name: formName.trim(),
       code: formCode.trim(),
       client: formClient.trim() || "—",
+      clientName: formClient.trim() || "—",
       location: formLocation.trim() || "—",
       startDate: formStart || "—",
       endDate: formEnd || "—",
       status: "Active",
       description: formDesc.trim(),
-    });
+    } as any);
     resetForm();
     setShowNew(false);
     navigate(`/projects/${p.id}`);

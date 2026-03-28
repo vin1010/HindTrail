@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useData } from "../context/DataContext";
@@ -56,9 +56,14 @@ export default function ProjectDetail() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const { projects, packages, addPackage, getChildren } = useData();
+  const { projects, packages, addPackage, getChildren, loadProjects, loadPackages } = useData();
   const [selectedPkg, setSelectedPkg] = useState<string | null>(null);
   const [showNewPkg, setShowNewPkg] = useState(false);
+
+  useEffect(() => {
+    loadProjects();
+    if (projectId) loadPackages(projectId);
+  }, [projectId]);
 
   // Form state
   const [fName, setFName] = useState("");
@@ -90,9 +95,9 @@ export default function ProjectDetail() {
     setFName(""); setFCode(""); setFParent(""); setFOwner(""); setFResp(""); setFDue(""); setFDesc("");
   };
 
-  const handleCreatePkg = () => {
+  const handleCreatePkg = async () => {
     if (!fName.trim() || !fCode.trim()) return;
-    const newPkg = addPackage({
+    const newPkg = await addPackage({
       projectId: project.id,
       parentId: fParent || null,
       name: fName.trim(),
