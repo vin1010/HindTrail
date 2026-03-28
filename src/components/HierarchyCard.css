@@ -1,0 +1,68 @@
+.h-card {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.04);
+  margin-bottom: 16px;
+}
+
+.h-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.h-card h3 {
+  font-size: 16px;
+  margin: 0;
+}
+
+.h-card p {
+  font-size: 13px;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+/* Status pills */
+.status {
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-weight: 500;
+}
+
+.status.active {
+  background: #ecfeff;
+  color: #0369a1;
+}
+
+.status.in-progress {
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.status.completed {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+/* Progress */
+.progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #6366f1, #4f46e5);
+}
