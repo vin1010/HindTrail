@@ -1,28 +1,28 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { PROJECTS, WORK_PACKAGES, ISSUES, APPROVALS, ACTIVITY } from "../data/mock";
+import { useData } from "../context/DataContext";
 import "./Workspace.css";
 
 export default function Workspace() {
   const { user, logout, setActiveCompany } = useAuth();
+  const { projects, packages, issues, approvals, activity } = useData();
   const navigate = useNavigate();
 
   if (!user) return null;
 
   const activeCompany = user.memberships.find((m) => m.id === user.activeCompanyId);
 
-  // Compute stats from mock data
-  const openIssues = ISSUES.filter((i) => i.status !== "Closed").length;
-  const pendingApprovals = APPROVALS.filter((a) => a.decision === "Pending").length;
-  const inProgressPkgs = WORK_PACKAGES.filter((wp) => wp.status === "In Progress").length;
-  const recentActivity = ACTIVITY.slice(0, 5);
+  // Compute live stats
+  const activeProjects = projects.filter((p) => p.status === "Active");
+  const openIssues = issues.filter((i) => i.status !== "Closed").length;
+  const pendingApprovals = approvals.filter((a) => a.decision === "Pending").length;
+  const inProgressPkgs = packages.filter((wp) => wp.status === "In Progress").length;
+  const recentActivity = activity.slice(0, 8);
 
   return (
     <div className="ws-layout">
-      {/* Sidebar */}
       <aside className="ws-sidebar">
         <div className="ws-logo" onClick={() => navigate("/workspace")}>HindTrail</div>
-
         <nav className="ws-nav">
           <a className="active" onClick={() => navigate("/workspace")}>
             <span className="ws-nav-icon">&#9632;</span> Dashboard
@@ -31,15 +31,11 @@ export default function Workspace() {
             <span className="ws-nav-icon">&#9645;</span> Projects
           </a>
         </nav>
-
         <div className="ws-user">
           {user.memberships.length > 1 && (
             <div className="ws-company-switch">
               <label>Viewing as</label>
-              <select
-                value={user.activeCompanyId || ""}
-                onChange={(e) => setActiveCompany(e.target.value)}
-              >
+              <select value={user.activeCompanyId || ""} onChange={(e) => setActiveCompany(e.target.value)}>
                 {user.memberships.map((m) => (
                   <option key={m.id} value={m.id}>{m.name}</option>
                 ))}
@@ -53,27 +49,21 @@ export default function Workspace() {
               <span>{activeCompany?.name}</span>
             </div>
           </div>
-          <button className="ws-logout" onClick={() => { logout(); navigate("/login"); }}>
-            Sign out
-          </button>
+          <button className="ws-logout" onClick={() => { logout(); navigate("/login"); }}>Sign out</button>
         </div>
       </aside>
 
-      {/* Main content */}
       <main className="ws-main">
         <div className="ws-header">
           <div>
             <h1>Welcome back, {user.fullName}</h1>
-            <p>
-              {activeCompany?.name} &middot; {activeCompany?.role?.toUpperCase()}
-            </p>
+            <p>{activeCompany?.name} &middot; {activeCompany?.role?.toUpperCase()}</p>
           </div>
         </div>
 
-        {/* Stats */}
         <div className="ws-stats">
           <div className="ws-stat-card">
-            <span className="ws-stat-value">{PROJECTS.length}</span>
+            <span className="ws-stat-value">{activeProjects.length}</span>
             <span className="ws-stat-label">Active Projects</span>
           </div>
           <div className="ws-stat-card">
@@ -90,21 +80,14 @@ export default function Workspace() {
           </div>
         </div>
 
-        {/* My Projects */}
         <section className="ws-section">
           <div className="ws-section-header">
             <h2>My Projects</h2>
-            <button className="btn-ghost btn-sm" onClick={() => navigate("/projects")}>
-              View all
-            </button>
+            <button className="btn-ghost btn-sm" onClick={() => navigate("/projects")}>View all</button>
           </div>
           <div className="ws-projects-grid">
-            {PROJECTS.filter((p) => p.status === "Active").map((p) => (
-              <div
-                key={p.id}
-                className="ws-project-card"
-                onClick={() => navigate(`/projects/${p.id}`)}
-              >
+            {activeProjects.map((p) => (
+              <div key={p.id} className="ws-project-card" onClick={() => navigate(`/projects/${p.id}`)}>
                 <div className="ws-proj-top">
                   <span className="ws-proj-code">{p.code}</span>
                   <span className="ws-proj-status">{p.status}</span>
@@ -117,10 +100,10 @@ export default function Workspace() {
                 </div>
               </div>
             ))}
+            {activeProjects.length === 0 && <p className="proj-empty">No active projects yet.</p>}
           </div>
         </section>
 
-        {/* Recent Activity */}
         <section className="ws-section">
           <h2>Recent Activity</h2>
           <div className="ws-activity-list">
@@ -138,6 +121,7 @@ export default function Workspace() {
                 </div>
               </div>
             ))}
+            {recentActivity.length === 0 && <p className="proj-empty">No activity yet.</p>}
           </div>
         </section>
       </main>

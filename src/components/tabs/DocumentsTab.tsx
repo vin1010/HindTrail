@@ -1,17 +1,23 @@
 import { useState } from "react";
-import { DOCUMENTS, type Document } from "../../data/mock";
+import { useData } from "../../context/DataContext";
+import type { Document, DocStatus } from "../../data/mock";
 
 const STATUS_COLORS: Record<string, string> = {
-  Draft: "tag-grey",
-  Submitted: "tag-blue",
-  "Approved for Use": "tag-green",
-  Superseded: "tag-muted",
+  Draft: "tag-grey", Submitted: "tag-blue", "Approved for Use": "tag-green", Superseded: "tag-muted",
 };
 
 export default function DocumentsTab({ packageId }: { packageId: string }) {
-  const docs = DOCUMENTS.filter((d) => d.packageId === packageId);
+  const { documents, addDocument, supersedePreviousRevisions } = useData();
+  const docs = documents.filter((d) => d.packageId === packageId);
   const [showUpload, setShowUpload] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
+
+  // Form state
+  const [fTitle, setFTitle] = useState("");
+  const [fType, setFType] = useState("Procedure");
+  const [fRev, setFRev] = useState("");
+  const [fStatus, setFStatus] = useState<DocStatus>("Draft");
+  const [fNotes, setFNotes] = useState("");
 
   // Group by title to show revision history
   const grouped = docs.reduce<Record<string, Document[]>>((acc, d) => {
@@ -19,11 +25,51 @@ export default function DocumentsTab({ packageId }: { packageId: string }) {
     return acc;
   }, {});
 
+  const resetForm = () => {
+    setFTitle(""); setFType("Procedure"); setFRev(""); setFStatus("Draft"); setFNotes("");
+  };
+
+  const handleUpload = () => {
+    if (!fTitle.trim() || !fRev.trim()) return;
+    const newDoc = addDocument({
+      packageId,
+      title: fTitle.trim(),
+      type: fType,
+      revision: fRev.trim(),
+      status: fStatus,
+      uploadedBy: "Vindy",
+      uploadDate: new Date().toISOString().split("T")[0],
+      isCurrent: true,
+      notes: fNotes.trim(),
+    });
+    // Auto-supersede previous revisions of same title
+    supersedePreviousRevisions(packageId, fTitle.trim(), newDoc.id);
+    resetForm();
+    setShowUpload(false);
+  };
+
+  const handleUploadRevision = (title: string) => {
+    setFTitle(title);
+    const existingRevs = docs.filter((d) => d.title === title);
+    const lastRev = existingRevs.sort((a, b) => b.revision.localeCompare(a.revision))[0];
+    // Auto-increment revision letter
+    if (lastRev) {
+      const match = lastRev.revision.match(/Rev\s*([A-Z])/i);
+      if (match) {
+        const next = String.fromCharCode(match[1].charCodeAt(0) + 1);
+        setFRev(`Rev ${next}`);
+      } else {
+        setFRev("");
+      }
+    }
+    setShowUpload(true);
+  };
+
   return (
     <div className="tab-content">
       <div className="tab-bar">
         <span className="tab-count">{docs.length} document(s)</span>
-        <button className="btn-primary btn-sm" onClick={() => setShowUpload(true)}>
+        <button className="btn-primary btn-sm" onClick={() => { resetForm(); setShowUpload(true); }}>
           + Upload Document
         </button>
       </div>
@@ -53,14 +99,11 @@ export default function DocumentsTab({ packageId }: { packageId: string }) {
                     <div key={rev.id} className={`rev-row ${rev.isCurrent ? "rev-current" : ""}`}>
                       <span className="rev-tag">{rev.revision}</span>
                       <span className="rev-status">{rev.status}</span>
-                      <span className="rev-by">
-                        {rev.uploadedBy} · {rev.uploadDate}
-                      </span>
+                      <span className="rev-by">{rev.uploadedBy} · {rev.uploadDate}</span>
                       {rev.notes && <span className="rev-notes">{rev.notes}</span>}
-                      <button className="btn-link">Download</button>
                     </div>
                   ))}
-                <button className="btn-ghost btn-sm" style={{ marginTop: 8 }}>
+                <button className="btn-ghost btn-sm" style={{ marginTop: 8 }} onClick={() => handleUploadRevision(title)}>
                   + Upload New Revision
                 </button>
               </div>
@@ -72,35 +115,29 @@ export default function DocumentsTab({ packageId }: { packageId: string }) {
       {docs.length === 0 && <p className="empty-state">No documents uploaded yet.</p>}
 
       {showUpload && (
-        <div className="modal-overlay" onClick={() => setShowUpload(false)}>
+        <div className="modal-overlay" onClick={() => { setShowUpload(false); resetForm(); }}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h2>Upload Document</h2>
+            <h2>{fTitle ? `Upload Revision — ${fTitle}` : "Upload Document"}</h2>
             <div className="modal-fields">
-              <label>Document Title<input placeholder="e.g. Overhaul Procedure" /></label>
+              <label>Document Title *<input placeholder="e.g. Overhaul Procedure" value={fTitle} onChange={(e) => setFTitle(e.target.value)} required /></label>
               <label>Document Type
-                <select>
-                  <option>Procedure</option>
-                  <option>Method Statement</option>
-                  <option>Certificate</option>
-                  <option>Drawing</option>
-                  <option>Report</option>
-                  <option>Other</option>
+                <select value={fType} onChange={(e) => setFType(e.target.value)}>
+                  <option>Procedure</option><option>Method Statement</option><option>Certificate</option>
+                  <option>Drawing</option><option>Report</option><option>Other</option>
                 </select>
               </label>
-              <label>Revision<input placeholder="e.g. Rev A" /></label>
+              <label>Revision *<input placeholder="e.g. Rev A" value={fRev} onChange={(e) => setFRev(e.target.value)} required /></label>
               <label>Status
-                <select>
-                  <option>Draft</option>
-                  <option>Submitted</option>
-                  <option>Approved for Use</option>
+                <select value={fStatus} onChange={(e) => setFStatus(e.target.value as DocStatus)}>
+                  <option>Draft</option><option>Submitted</option><option>Approved for Use</option>
                 </select>
               </label>
-              <label>Notes<textarea rows={2} /></label>
+              <label>Notes<textarea rows={2} value={fNotes} onChange={(e) => setFNotes(e.target.value)} /></label>
               <label>File<input type="file" /></label>
             </div>
             <div className="modal-actions">
-              <button className="btn-ghost" onClick={() => setShowUpload(false)}>Cancel</button>
-              <button className="btn-primary" onClick={() => setShowUpload(false)}>Upload</button>
+              <button className="btn-ghost" onClick={() => { setShowUpload(false); resetForm(); }}>Cancel</button>
+              <button className="btn-primary" onClick={handleUpload} disabled={!fTitle.trim() || !fRev.trim()}>Upload</button>
             </div>
           </div>
         </div>

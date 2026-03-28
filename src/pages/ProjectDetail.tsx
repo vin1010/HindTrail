@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { PROJECTS, WORK_PACKAGES, getChildren, type WorkPackage } from "../data/mock";
+import { useData } from "../context/DataContext";
+import type { WorkPackage } from "../data/mock";
 import "./ProjectDetail.css";
 
 const STATUS_COLORS: Record<string, string> = {
@@ -13,32 +14,22 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 function TreeNode({
-  pkg,
-  level,
-  selectedId,
-  onSelect,
+  pkg, level, selectedId, onSelect, getChildren,
 }: {
-  pkg: WorkPackage;
-  level: number;
-  selectedId: string | null;
+  pkg: WorkPackage; level: number; selectedId: string | null;
   onSelect: (id: string) => void;
+  getChildren: (parentId: string | null, projectId: string) => WorkPackage[];
 }) {
   const [expanded, setExpanded] = useState(true);
-  const children = getChildren(WORK_PACKAGES, pkg.id, pkg.projectId);
+  const children = getChildren(pkg.id, pkg.projectId);
   const hasChildren = children.length > 0;
   const isSelected = selectedId === pkg.id;
 
   return (
     <div className="tree-node" style={{ paddingLeft: level * 20 }}>
-      <div
-        className={`tree-node-row ${isSelected ? "tree-selected" : ""}`}
-        onClick={() => onSelect(pkg.id)}
-      >
+      <div className={`tree-node-row ${isSelected ? "tree-selected" : ""}`} onClick={() => onSelect(pkg.id)}>
         {hasChildren ? (
-          <button
-            className="tree-toggle"
-            onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
-          >
+          <button className="tree-toggle" onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}>
             {expanded ? "▾" : "▸"}
           </button>
         ) : (
@@ -53,13 +44,7 @@ function TreeNode({
       {expanded && hasChildren && (
         <div className="tree-children">
           {children.map((child) => (
-            <TreeNode
-              key={child.id}
-              pkg={child}
-              level={level + 1}
-              selectedId={selectedId}
-              onSelect={onSelect}
-            />
+            <TreeNode key={child.id} pkg={child} level={level + 1} selectedId={selectedId} onSelect={onSelect} getChildren={getChildren} />
           ))}
         </div>
       )}
@@ -71,10 +56,20 @@ export default function ProjectDetail() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { projects, packages, addPackage, getChildren } = useData();
   const [selectedPkg, setSelectedPkg] = useState<string | null>(null);
   const [showNewPkg, setShowNewPkg] = useState(false);
 
-  const project = PROJECTS.find((p) => p.id === projectId);
+  // Form state
+  const [fName, setFName] = useState("");
+  const [fCode, setFCode] = useState("");
+  const [fParent, setFParent] = useState("");
+  const [fOwner, setFOwner] = useState("");
+  const [fResp, setFResp] = useState("");
+  const [fDue, setFDue] = useState("");
+  const [fDesc, setFDesc] = useState("");
+
+  const project = projects.find((p) => p.id === projectId);
   if (!project) {
     return (
       <div className="pd-layout">
@@ -86,29 +81,42 @@ export default function ProjectDetail() {
     );
   }
 
-  const rootPackages = getChildren(WORK_PACKAGES, null, project.id);
-  const selected = WORK_PACKAGES.find((wp) => wp.id === selectedPkg);
-
+  const rootPackages = getChildren(null, project.id);
+  const selected = packages.find((wp) => wp.id === selectedPkg);
   const activeCompany = user?.memberships.find((m) => m.id === user.activeCompanyId);
+  const projectPackages = packages.filter((wp) => wp.projectId === projectId);
+
+  const resetForm = () => {
+    setFName(""); setFCode(""); setFParent(""); setFOwner(""); setFResp(""); setFDue(""); setFDesc("");
+  };
+
+  const handleCreatePkg = () => {
+    if (!fName.trim() || !fCode.trim()) return;
+    const newPkg = addPackage({
+      projectId: project.id,
+      parentId: fParent || null,
+      name: fName.trim(),
+      code: fCode.trim(),
+      ownerCompany: fOwner.trim() || activeCompany?.name || "—",
+      responsible: fResp.trim() || "—",
+      dueDate: fDue || "—",
+      status: "Not Started",
+      description: fDesc.trim(),
+    });
+    resetForm();
+    setShowNewPkg(false);
+    setSelectedPkg(newPkg.id);
+  };
 
   return (
     <div className="pd-layout">
-      {/* Sidebar */}
       <aside className="pd-sidebar">
         <div className="pd-logo" onClick={() => navigate("/workspace")}>HindTrail</div>
-
         <nav className="pd-nav">
-          <a onClick={() => navigate("/workspace")}>
-            <span className="ws-nav-icon">&#9632;</span> Dashboard
-          </a>
-          <a onClick={() => navigate("/projects")}>
-            <span className="ws-nav-icon">&#9645;</span> Projects
-          </a>
-          <a className="active">
-            <span className="ws-nav-icon">&#9659;</span> {project.code}
-          </a>
+          <a onClick={() => navigate("/workspace")}><span className="ws-nav-icon">&#9632;</span> Dashboard</a>
+          <a onClick={() => navigate("/projects")}><span className="ws-nav-icon">&#9645;</span> Projects</a>
+          <a className="active"><span className="ws-nav-icon">&#9659;</span> {project.code}</a>
         </nav>
-
         <div className="ws-user">
           <div className="ws-user-info">
             <div className="ws-avatar">{user?.fullName.charAt(0)}</div>
@@ -117,13 +125,10 @@ export default function ProjectDetail() {
               <span>{activeCompany?.name}</span>
             </div>
           </div>
-          <button className="ws-logout" onClick={() => { logout(); navigate("/login"); }}>
-            Sign out
-          </button>
+          <button className="ws-logout" onClick={() => { logout(); navigate("/login"); }}>Sign out</button>
         </div>
       </aside>
 
-      {/* Tree panel */}
       <div className="pd-tree-panel">
         <div className="pd-tree-header">
           <div>
@@ -135,29 +140,19 @@ export default function ProjectDetail() {
               <span>{project.location}</span>
             </div>
           </div>
-          <button className="btn-primary btn-sm" onClick={() => setShowNewPkg(true)}>
-            + Package
-          </button>
+          <button className="btn-primary btn-sm" onClick={() => setShowNewPkg(true)}>+ Package</button>
         </div>
-
         <div className="pd-tree-body">
           {rootPackages.length === 0 ? (
             <p className="pd-tree-empty">No work packages yet. Create one to get started.</p>
           ) : (
             rootPackages.map((pkg) => (
-              <TreeNode
-                key={pkg.id}
-                pkg={pkg}
-                level={0}
-                selectedId={selectedPkg}
-                onSelect={(id) => setSelectedPkg(id)}
-              />
+              <TreeNode key={pkg.id} pkg={pkg} level={0} selectedId={selectedPkg} onSelect={setSelectedPkg} getChildren={getChildren} />
             ))
           )}
         </div>
       </div>
 
-      {/* Detail panel */}
       <div className="pd-detail-panel">
         {selected ? (
           <div className="pd-detail-content">
@@ -167,38 +162,17 @@ export default function ProjectDetail() {
                 <h2>{selected.name}</h2>
                 <span className={`tag ${STATUS_COLORS[selected.status]}`}>{selected.status}</span>
               </div>
-              <button
-                className="btn-primary btn-sm"
-                onClick={() => navigate(`/projects/${projectId}/packages/${selected.id}`)}
-              >
+              <button className="btn-primary btn-sm" onClick={() => navigate(`/projects/${projectId}/packages/${selected.id}`)}>
                 Open Full View
               </button>
             </div>
-
             <div className="pd-detail-grid">
-              <div className="pd-detail-row">
-                <span className="pd-detail-label">Owner Company</span>
-                <span>{selected.ownerCompany}</span>
-              </div>
-              <div className="pd-detail-row">
-                <span className="pd-detail-label">Responsible</span>
-                <span>{selected.responsible}</span>
-              </div>
-              <div className="pd-detail-row">
-                <span className="pd-detail-label">Due Date</span>
-                <span>{selected.dueDate}</span>
-              </div>
-              <div className="pd-detail-row pd-detail-full">
-                <span className="pd-detail-label">Description</span>
-                <p>{selected.description || "—"}</p>
-              </div>
+              <div className="pd-detail-row"><span className="pd-detail-label">Owner Company</span><span>{selected.ownerCompany}</span></div>
+              <div className="pd-detail-row"><span className="pd-detail-label">Responsible</span><span>{selected.responsible}</span></div>
+              <div className="pd-detail-row"><span className="pd-detail-label">Due Date</span><span>{selected.dueDate}</span></div>
+              <div className="pd-detail-row pd-detail-full"><span className="pd-detail-label">Description</span><p>{selected.description || "—"}</p></div>
             </div>
-
-            <button
-              className="btn-primary"
-              style={{ marginTop: 20 }}
-              onClick={() => navigate(`/projects/${projectId}/packages/${selected.id}`)}
-            >
+            <button className="btn-primary" style={{ marginTop: 20 }} onClick={() => navigate(`/projects/${projectId}/packages/${selected.id}`)}>
               View Documents, Inspections, Issues &amp; More
             </button>
           </div>
@@ -211,30 +185,29 @@ export default function ProjectDetail() {
         )}
       </div>
 
-      {/* New Package Modal */}
       {showNewPkg && (
-        <div className="modal-overlay" onClick={() => setShowNewPkg(false)}>
+        <div className="modal-overlay" onClick={() => { setShowNewPkg(false); resetForm(); }}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h2>Create Work Package</h2>
             <div className="modal-fields">
-              <label>Package Name<input placeholder="e.g. Mechanical Scope" /></label>
-              <label>Package Code<input placeholder="e.g. MCA-MECH" /></label>
+              <label>Package Name *<input placeholder="e.g. Mechanical Scope" value={fName} onChange={(e) => setFName(e.target.value)} required /></label>
+              <label>Package Code *<input placeholder="e.g. MCA-MECH" value={fCode} onChange={(e) => setFCode(e.target.value)} required /></label>
               <label>Parent Package
-                <select>
+                <select value={fParent} onChange={(e) => setFParent(e.target.value)}>
                   <option value="">None (root level)</option>
-                  {WORK_PACKAGES.filter((wp) => wp.projectId === projectId).map((wp) => (
+                  {projectPackages.map((wp) => (
                     <option key={wp.id} value={wp.id}>{wp.code} — {wp.name}</option>
                   ))}
                 </select>
               </label>
-              <label>Owner Company<input placeholder="e.g. Roteq Engineering" /></label>
-              <label>Responsible Person<input placeholder="e.g. Sara Nkosi" /></label>
-              <label>Due Date<input type="date" /></label>
-              <label>Description<textarea rows={3} placeholder="Package scope..." /></label>
+              <label>Owner Company<input placeholder="e.g. Roteq Engineering" value={fOwner} onChange={(e) => setFOwner(e.target.value)} /></label>
+              <label>Responsible Person<input placeholder="e.g. Sara Nkosi" value={fResp} onChange={(e) => setFResp(e.target.value)} /></label>
+              <label>Due Date<input type="date" value={fDue} onChange={(e) => setFDue(e.target.value)} /></label>
+              <label>Description<textarea rows={3} placeholder="Package scope..." value={fDesc} onChange={(e) => setFDesc(e.target.value)} /></label>
             </div>
             <div className="modal-actions">
-              <button className="btn-ghost" onClick={() => setShowNewPkg(false)}>Cancel</button>
-              <button className="btn-primary" onClick={() => setShowNewPkg(false)}>Create Package</button>
+              <button className="btn-ghost" onClick={() => { setShowNewPkg(false); resetForm(); }}>Cancel</button>
+              <button className="btn-primary" onClick={handleCreatePkg} disabled={!fName.trim() || !fCode.trim()}>Create Package</button>
             </div>
           </div>
         </div>

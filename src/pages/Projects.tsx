@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { PROJECTS, type Project, type ProjectStatus } from "../data/mock";
+import { useData } from "../context/DataContext";
+import type { Project, ProjectStatus } from "../data/mock";
 import "./Projects.css";
 
 const STATUS_COLORS: Record<ProjectStatus, string> = {
@@ -38,17 +39,49 @@ function ProjectCard({ project, onClick }: { project: Project; onClick: () => vo
 export default function Projects() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { projects, addProject } = useData();
   const [search, setSearch] = useState("");
   const [showNew, setShowNew] = useState(false);
 
+  // Form state
+  const [formName, setFormName] = useState("");
+  const [formCode, setFormCode] = useState("");
+  const [formClient, setFormClient] = useState("");
+  const [formLocation, setFormLocation] = useState("");
+  const [formStart, setFormStart] = useState("");
+  const [formEnd, setFormEnd] = useState("");
+  const [formDesc, setFormDesc] = useState("");
+
   const activeCompany = user?.memberships.find((m) => m.id === user.activeCompanyId);
 
-  const filtered = PROJECTS.filter(
+  const filtered = projects.filter(
     (p) =>
       p.name.toLowerCase().includes(search.toLowerCase()) ||
       p.client.toLowerCase().includes(search.toLowerCase()) ||
       p.code.toLowerCase().includes(search.toLowerCase())
   );
+
+  const resetForm = () => {
+    setFormName(""); setFormCode(""); setFormClient("");
+    setFormLocation(""); setFormStart(""); setFormEnd(""); setFormDesc("");
+  };
+
+  const handleCreate = () => {
+    if (!formName.trim() || !formCode.trim()) return;
+    const p = addProject({
+      name: formName.trim(),
+      code: formCode.trim(),
+      client: formClient.trim() || "—",
+      location: formLocation.trim() || "—",
+      startDate: formStart || "—",
+      endDate: formEnd || "—",
+      status: "Active",
+      description: formDesc.trim(),
+    });
+    resetForm();
+    setShowNew(false);
+    navigate(`/projects/${p.id}`);
+  };
 
   return (
     <div className="projects-layout">
@@ -80,7 +113,7 @@ export default function Projects() {
         <div className="proj-topbar">
           <div>
             <h1>Projects</h1>
-            <p>{PROJECTS.length} projects accessible to you</p>
+            <p>{projects.length} projects accessible to you</p>
           </div>
           <button className="btn-primary" onClick={() => setShowNew(true)}>
             + New Project
@@ -105,23 +138,23 @@ export default function Projects() {
       </main>
 
       {showNew && (
-        <div className="modal-overlay" onClick={() => setShowNew(false)}>
+        <div className="modal-overlay" onClick={() => { setShowNew(false); resetForm(); }}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h2>New Project</h2>
             <div className="modal-fields">
-              <label>Project Name<input placeholder="e.g. Refinery Turnaround 2026" /></label>
-              <label>Project Code<input placeholder="e.g. RT-2026" /></label>
-              <label>Client Name<input placeholder="e.g. SasolOil" /></label>
-              <label>Location<input placeholder="e.g. Secunda, South Africa" /></label>
+              <label>Project Name *<input placeholder="e.g. Refinery Turnaround 2026" value={formName} onChange={(e) => setFormName(e.target.value)} required /></label>
+              <label>Project Code *<input placeholder="e.g. RT-2026" value={formCode} onChange={(e) => setFormCode(e.target.value)} required /></label>
+              <label>Client Name<input placeholder="e.g. SasolOil" value={formClient} onChange={(e) => setFormClient(e.target.value)} /></label>
+              <label>Location<input placeholder="e.g. Secunda, South Africa" value={formLocation} onChange={(e) => setFormLocation(e.target.value)} /></label>
               <div className="modal-row">
-                <label>Start Date<input type="date" /></label>
-                <label>End Date<input type="date" /></label>
+                <label>Start Date<input type="date" value={formStart} onChange={(e) => setFormStart(e.target.value)} /></label>
+                <label>End Date<input type="date" value={formEnd} onChange={(e) => setFormEnd(e.target.value)} /></label>
               </div>
-              <label>Description<textarea rows={3} placeholder="Brief scope description..." /></label>
+              <label>Description<textarea rows={3} placeholder="Brief scope description..." value={formDesc} onChange={(e) => setFormDesc(e.target.value)} /></label>
             </div>
             <div className="modal-actions">
-              <button className="btn-ghost" onClick={() => setShowNew(false)}>Cancel</button>
-              <button className="btn-primary" onClick={() => setShowNew(false)}>Create Project</button>
+              <button className="btn-ghost" onClick={() => { setShowNew(false); resetForm(); }}>Cancel</button>
+              <button className="btn-primary" onClick={handleCreate} disabled={!formName.trim() || !formCode.trim()}>Create Project</button>
             </div>
           </div>
         </div>

@@ -1,17 +1,116 @@
-import { DOCUMENTS, INSPECTIONS, ISSUES, APPROVALS, ACTIVITY, type WorkPackage } from "../../data/mock";
+import { useData } from "../../context/DataContext";
+import type { WorkPackage } from "../../data/mock";
 
 export default function ExportTab({ pkg }: { pkg: WorkPackage }) {
-  const docs = DOCUMENTS.filter((d) => d.packageId === pkg.id);
-  const inspections = INSPECTIONS.filter((i) => i.packageId === pkg.id);
-  const issues = ISSUES.filter((i) => i.packageId === pkg.id);
-  const approvals = APPROVALS.filter((a) => a.packageId === pkg.id);
-  const activity = ACTIVITY.filter((a) => a.packageId === pkg.id);
+  const { documents, inspections, issues, approvals, activity } = useData();
 
-  const openIssues = issues.filter((i) => i.status !== "Closed").length;
-  const pendingApprovals = approvals.filter((a) => a.decision === "Pending").length;
-  const passedInspections = inspections.filter((i) => i.result === "Passed").length;
+  const docs = documents.filter((d) => d.packageId === pkg.id);
+  const pkgInspections = inspections.filter((i) => i.packageId === pkg.id);
+  const pkgIssues = issues.filter((i) => i.packageId === pkg.id);
+  const pkgApprovals = approvals.filter((a) => a.packageId === pkg.id);
+  const pkgActivity = activity.filter((a) => a.packageId === pkg.id);
+
+  const openIssues = pkgIssues.filter((i) => i.status !== "Closed").length;
+  const pendingApprovals = pkgApprovals.filter((a) => a.decision === "Pending").length;
+  const passedInspections = pkgInspections.filter((i) => i.result === "Passed").length;
 
   const readiness = openIssues === 0 && pendingApprovals === 0;
+
+  const generateTextExport = () => {
+    const lines: string[] = [];
+    lines.push("═══════════════════════════════════════════════════");
+    lines.push("WORK PACKAGE EVIDENCE PACK");
+    lines.push("═══════════════════════════════════════════════════");
+    lines.push("");
+    lines.push(`Package: ${pkg.name} (${pkg.code})`);
+    lines.push(`Status: ${pkg.status}`);
+    lines.push(`Owner: ${pkg.ownerCompany}`);
+    lines.push(`Responsible: ${pkg.responsible}`);
+    lines.push(`Due Date: ${pkg.dueDate}`);
+    lines.push(`Description: ${pkg.description}`);
+    lines.push("");
+
+    lines.push("─── DOCUMENT REGISTER ─────────────────────────────");
+    if (docs.length === 0) {
+      lines.push("  No documents.");
+    } else {
+      docs.forEach((d) => {
+        lines.push(`  ${d.title} | ${d.revision} | ${d.status} | ${d.uploadedBy} | ${d.uploadDate}`);
+        if (d.notes) lines.push(`    Notes: ${d.notes}`);
+      });
+    }
+    lines.push("");
+
+    lines.push("─── INSPECTIONS ───────────────────────────────────");
+    if (pkgInspections.length === 0) {
+      lines.push("  No inspections.");
+    } else {
+      pkgInspections.forEach((i) => {
+        lines.push(`  ${i.type} | ${i.result} | ${i.inspector} | ${i.date}`);
+        if (i.notes) lines.push(`    Notes: ${i.notes}`);
+      });
+    }
+    lines.push("");
+
+    lines.push("─── ISSUES / NCR ──────────────────────────────────");
+    if (pkgIssues.length === 0) {
+      lines.push("  No issues.");
+    } else {
+      pkgIssues.forEach((i) => {
+        lines.push(`  [${i.severity}] ${i.title} | ${i.status} | Owner: ${i.owner}`);
+        if (i.closureNotes) lines.push(`    Closure: ${i.closureNotes}`);
+      });
+    }
+    lines.push("");
+
+    lines.push("─── APPROVALS / SIGN-OFFS ─────────────────────────");
+    if (pkgApprovals.length === 0) {
+      lines.push("  No approvals.");
+    } else {
+      pkgApprovals.forEach((a) => {
+        lines.push(`  ${a.objectType}: ${a.objectLabel} | ${a.decision} | ${a.approver} | ${a.decisionDate || "—"}`);
+        if (a.comments) lines.push(`    Comments: ${a.comments}`);
+      });
+    }
+    lines.push("");
+
+    lines.push("─── AUDIT TRAIL ───────────────────────────────────");
+    if (pkgActivity.length === 0) {
+      lines.push("  No activity.");
+    } else {
+      pkgActivity.forEach((a) => {
+        lines.push(`  ${a.timestamp} | ${a.user} (${a.company}) | ${a.actionType} | ${a.objectLabel}`);
+      });
+    }
+    lines.push("");
+    lines.push("═══════════════════════════════════════════════════");
+    lines.push(`Generated: ${new Date().toISOString()}`);
+
+    return lines.join("\n");
+  };
+
+  const handleExportPDF = () => {
+    const content = generateTextExport();
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${pkg.code}_Evidence_Pack.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportZIP = () => {
+    // For MVP, export as a structured text file (ZIP would require a library)
+    const content = generateTextExport();
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${pkg.code}_Evidence_Pack_Full.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="tab-content">
@@ -22,7 +121,7 @@ export default function ExportTab({ pkg }: { pkg: WorkPackage }) {
 
       <div className="readiness-card">
         <div className={`readiness-indicator ${readiness ? "ready" : "not-ready"}`}>
-          {readiness ? "✓ Ready for Export" : "⚠ Package not yet ready"}
+          {readiness ? "Ready for Export" : "Package not yet ready"}
         </div>
         {!readiness && (
           <ul className="readiness-blockers">
@@ -38,7 +137,7 @@ export default function ExportTab({ pkg }: { pkg: WorkPackage }) {
           <span className="export-stat-label">Documents</span>
         </div>
         <div className="export-stat">
-          <span className="export-stat-value">{inspections.length}</span>
+          <span className="export-stat-value">{pkgInspections.length}</span>
           <span className="export-stat-label">Inspections</span>
         </div>
         <div className="export-stat">
@@ -46,15 +145,15 @@ export default function ExportTab({ pkg }: { pkg: WorkPackage }) {
           <span className="export-stat-label">Passed</span>
         </div>
         <div className="export-stat">
-          <span className="export-stat-value">{issues.length}</span>
+          <span className="export-stat-value">{pkgIssues.length}</span>
           <span className="export-stat-label">Issues</span>
         </div>
         <div className="export-stat">
-          <span className="export-stat-value">{approvals.filter((a) => a.decision === "Approved").length}</span>
+          <span className="export-stat-value">{pkgApprovals.filter((a) => a.decision === "Approved").length}</span>
           <span className="export-stat-label">Approved</span>
         </div>
         <div className="export-stat">
-          <span className="export-stat-value">{activity.length}</span>
+          <span className="export-stat-value">{pkgActivity.length}</span>
           <span className="export-stat-label">Audit Events</span>
         </div>
       </div>
@@ -68,13 +167,12 @@ export default function ExportTab({ pkg }: { pkg: WorkPackage }) {
           <li>Issue/NCR records + closure status</li>
           <li>Approval / sign-off history</li>
           <li>Full audit trail</li>
-          <li>Index of linked files</li>
         </ul>
       </div>
 
       <div className="export-btns">
-        <button className="btn-primary">Generate PDF Summary</button>
-        <button className="btn-ghost">Download ZIP Pack</button>
+        <button className="btn-primary" onClick={handleExportPDF}>Download Evidence Pack</button>
+        <button className="btn-ghost" onClick={handleExportZIP}>Download Full Report</button>
       </div>
     </div>
   );

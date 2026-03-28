@@ -1,13 +1,33 @@
-import { APPROVALS } from "../../data/mock";
+import { useState } from "react";
+import { useData } from "../../context/DataContext";
 
 const DEC_COLORS: Record<string, string> = {
-  Pending: "tag-yellow",
-  Approved: "tag-green",
-  Rejected: "tag-red",
+  Pending: "tag-yellow", Approved: "tag-green", Rejected: "tag-red",
 };
 
 export default function ApprovalsTab({ packageId }: { packageId: string }) {
-  const items = APPROVALS.filter((a) => a.packageId === packageId);
+  const { approvals, decideApproval } = useData();
+  const items = approvals.filter((a) => a.packageId === packageId);
+  const [commentingId, setCommentingId] = useState<string | null>(null);
+  const [comment, setComment] = useState("");
+
+  const handleApprove = (id: string) => {
+    decideApproval(id, "Approved", comment);
+    setCommentingId(null);
+    setComment("");
+  };
+
+  const handleReject = (id: string) => {
+    setCommentingId(id);
+  };
+
+  const confirmReject = () => {
+    if (commentingId) {
+      decideApproval(commentingId, "Rejected", comment);
+      setCommentingId(null);
+      setComment("");
+    }
+  };
 
   return (
     <div className="tab-content">
@@ -29,10 +49,7 @@ export default function ApprovalsTab({ packageId }: { packageId: string }) {
               <div className="list-meta">
                 <span>Approver: {a.approver}</span>
                 {a.decisionDate && (
-                  <>
-                    <span className="dot">·</span>
-                    <span>{a.decisionDate}</span>
-                  </>
+                  <><span className="dot">·</span><span>{a.decisionDate}</span></>
                 )}
               </div>
               {a.comments && <p className="list-notes">{a.comments}</p>}
@@ -41,8 +58,8 @@ export default function ApprovalsTab({ packageId }: { packageId: string }) {
               <span className={`tag ${DEC_COLORS[a.decision]}`}>{a.decision}</span>
               {a.decision === "Pending" && (
                 <div className="appr-btns">
-                  <button className="btn-approve">Approve</button>
-                  <button className="btn-reject">Reject</button>
+                  <button className="btn-approve" onClick={() => handleApprove(a.id)}>Approve</button>
+                  <button className="btn-reject" onClick={() => handleReject(a.id)}>Reject</button>
                 </div>
               )}
             </div>
@@ -50,6 +67,22 @@ export default function ApprovalsTab({ packageId }: { packageId: string }) {
         ))}
         {items.length === 0 && <p className="empty-state">No approval requests yet.</p>}
       </div>
+
+      {/* Reject with comment modal */}
+      {commentingId && (
+        <div className="modal-overlay" onClick={() => { setCommentingId(null); setComment(""); }}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2>Reject Approval</h2>
+            <div className="modal-fields">
+              <label>Rejection reason<textarea rows={3} placeholder="Explain why this is being rejected..." value={comment} onChange={(e) => setComment(e.target.value)} /></label>
+            </div>
+            <div className="modal-actions">
+              <button className="btn-ghost" onClick={() => { setCommentingId(null); setComment(""); }}>Cancel</button>
+              <button className="btn-reject" onClick={confirmReject}>Confirm Rejection</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

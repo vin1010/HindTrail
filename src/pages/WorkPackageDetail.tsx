@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { PROJECTS, WORK_PACKAGES } from "../data/mock";
+import { useData } from "../context/DataContext";
 import OverviewTab from "../components/tabs/OverviewTab";
 import DocumentsTab from "../components/tabs/DocumentsTab";
 import InspectionsTab from "../components/tabs/InspectionsTab";
@@ -12,44 +12,30 @@ import PermissionsTab from "../components/tabs/PermissionsTab";
 import ExportTab from "../components/tabs/ExportTab";
 import "./WorkPackageDetail.css";
 
-const TABS = [
-  "Overview",
-  "Documents",
-  "Inspections",
-  "Issues",
-  "Approvals",
-  "Activity",
-  "Permissions",
-  "Export Pack",
-] as const;
-
+const TABS = ["Overview", "Documents", "Inspections", "Issues", "Approvals", "Activity", "Permissions", "Export Pack"] as const;
 type TabName = (typeof TABS)[number];
 
 const STATUS_COLORS: Record<string, string> = {
-  "Not Started": "pkg-grey",
-  "In Progress": "pkg-blue",
-  "Awaiting Approval": "pkg-yellow",
-  "Ready for Handover": "pkg-green",
-  Closed: "pkg-muted",
+  "Not Started": "pkg-grey", "In Progress": "pkg-blue",
+  "Awaiting Approval": "pkg-yellow", "Ready for Handover": "pkg-green", Closed: "pkg-muted",
 };
 
 export default function WorkPackageDetail() {
   const { projectId, packageId } = useParams<{ projectId: string; packageId: string }>();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { projects, packages } = useData();
   const [activeTab, setActiveTab] = useState<TabName>("Overview");
 
-  const project = PROJECTS.find((p) => p.id === projectId);
-  const pkg = WORK_PACKAGES.find((wp) => wp.id === packageId);
+  const project = projects.find((p) => p.id === projectId);
+  const pkg = packages.find((wp) => wp.id === packageId);
 
   if (!project || !pkg) {
     return (
       <div className="wpd-layout">
         <div className="pd-empty">
           <h2>Package not found</h2>
-          <button className="btn-primary" onClick={() => navigate(`/projects/${projectId}`)}>
-            Back to Project
-          </button>
+          <button className="btn-primary" onClick={() => navigate(`/projects/${projectId}`)}>Back to Project</button>
         </div>
       </div>
     );
@@ -72,25 +58,14 @@ export default function WorkPackageDetail() {
 
   return (
     <div className="wpd-layout">
-      {/* Sidebar */}
       <aside className="wpd-sidebar">
         <div className="wpd-logo" onClick={() => navigate("/workspace")}>HindTrail</div>
-
         <nav className="wpd-nav">
-          <a onClick={() => navigate("/workspace")}>
-            <span className="ws-nav-icon">&#9632;</span> Dashboard
-          </a>
-          <a onClick={() => navigate("/projects")}>
-            <span className="ws-nav-icon">&#9645;</span> Projects
-          </a>
-          <a onClick={() => navigate(`/projects/${projectId}`)}>
-            <span className="ws-nav-icon">&#9659;</span> {project.code}
-          </a>
-          <a className="active">
-            <span className="ws-nav-icon">&#9654;</span> {pkg.code}
-          </a>
+          <a onClick={() => navigate("/workspace")}><span className="ws-nav-icon">&#9632;</span> Dashboard</a>
+          <a onClick={() => navigate("/projects")}><span className="ws-nav-icon">&#9645;</span> Projects</a>
+          <a onClick={() => navigate(`/projects/${projectId}`)}><span className="ws-nav-icon">&#9659;</span> {project.code}</a>
+          <a className="active"><span className="ws-nav-icon">&#9654;</span> {pkg.code}</a>
         </nav>
-
         <div className="ws-user">
           <div className="ws-user-info">
             <div className="ws-avatar">{user?.fullName.charAt(0)}</div>
@@ -99,15 +74,11 @@ export default function WorkPackageDetail() {
               <span>{activeCompany?.name}</span>
             </div>
           </div>
-          <button className="ws-logout" onClick={() => { logout(); navigate("/login"); }}>
-            Sign out
-          </button>
+          <button className="ws-logout" onClick={() => { logout(); navigate("/login"); }}>Sign out</button>
         </div>
       </aside>
 
-      {/* Main */}
       <main className="wpd-main">
-        {/* Breadcrumb */}
         <div className="wpd-breadcrumb">
           <span className="wpd-bc-link" onClick={() => navigate("/projects")}>Projects</span>
           <span className="wpd-bc-sep">/</span>
@@ -116,7 +87,6 @@ export default function WorkPackageDetail() {
           <span className="wpd-bc-current">{pkg.code}</span>
         </div>
 
-        {/* Package header */}
         <div className="wpd-header">
           <div>
             <h1>{pkg.name}</h1>
@@ -131,23 +101,15 @@ export default function WorkPackageDetail() {
           </div>
         </div>
 
-        {/* Tab bar */}
         <div className="wpd-tabs">
           {TABS.map((tab) => (
-            <button
-              key={tab}
-              className={`wpd-tab ${activeTab === tab ? "wpd-tab-active" : ""}`}
-              onClick={() => setActiveTab(tab)}
-            >
+            <button key={tab} className={`wpd-tab ${activeTab === tab ? "wpd-tab-active" : ""}`} onClick={() => setActiveTab(tab)}>
               {tab}
             </button>
           ))}
         </div>
 
-        {/* Tab content */}
-        <div className="wpd-tab-content">
-          {renderTab()}
-        </div>
+        <div className="wpd-tab-content">{renderTab()}</div>
       </main>
     </div>
   );

@@ -1,9 +1,10 @@
-import { ACTIVITY } from "../../data/mock";
+import { useData } from "../../context/DataContext";
 
 export default function ActivityTab({ packageId }: { packageId: string }) {
-  const entries = ACTIVITY.filter((a) => a.packageId === packageId).sort((a, b) =>
-    b.timestamp.localeCompare(a.timestamp)
-  );
+  const { activity } = useData();
+  const entries = activity
+    .filter((a) => a.packageId === packageId)
+    .sort((a, b) => b.timestamp.localeCompare(a.timestamp));
 
   return (
     <div className="tab-content">
