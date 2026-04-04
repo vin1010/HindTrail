@@ -1,6 +1,23 @@
 import { useState } from "react";
 import { useData } from "../../context/DataContext";
+import { useAuth } from "../../context/AuthContext";
 import type { Document, DocStatus } from "../../data/mock";
+
+const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME as string | undefined;
+const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET as string | undefined;
+
+async function uploadToCloudinary(file: File): Promise<string> {
+  if (!CLOUD_NAME || !UPLOAD_PRESET) {
+    throw new Error("Cloudinary not configured — set VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET");
+  }
+  const form = new FormData();
+  form.append("file", file);
+  form.append("upload_preset", UPLOAD_PRESET);
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, { method: "POST", body: form });
+  if (!res.ok) throw new Error("Upload failed");
+  const data = await res.json();
+  return data.secure_url as string;
+}
 
 const STATUS_COLORS: Record<string, string> = {
   Draft: "tag-grey", Submitted: "tag-blue", "Approved for Use": "tag-green", Superseded: "tag-muted",
@@ -8,9 +25,11 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function DocumentsTab({ packageId }: { packageId: string }) {
   const { documents, addDocument } = useData();
+  const { user } = useAuth();
   const docs = documents.filter((d) => d.packageId === packageId);
   const [showUpload, setShowUpload] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   // Form state
   const [fTitle, setFTitle] = useState("");
@@ -18,6 +37,7 @@ export default function DocumentsTab({ packageId }: { packageId: string }) {
   const [fRev, setFRev] = useState("");
   const [fStatus, setFStatus] = useState<DocStatus>("Draft");
   const [fNotes, setFNotes] = useState("");
+  const [fFile, setFFile] = useState<File | null>(null);
 
   // Group by title to show revision history
   const grouped = docs.reduce<Record<string, Document[]>>((acc, d) => {
@@ -26,24 +46,34 @@ export default function DocumentsTab({ packageId }: { packageId: string }) {
   }, {});
 
   const resetForm = () => {
-    setFTitle(""); setFType("Procedure"); setFRev(""); setFStatus("Draft"); setFNotes("");
+    setFTitle(""); setFType("Procedure"); setFRev(""); setFStatus("Draft"); setFNotes(""); setFFile(null);
   };
 
   const handleUpload = async () => {
     if (!fTitle.trim() || !fRev.trim()) return;
-    await addDocument({
-      packageId,
-      title: fTitle.trim(),
-      type: fType,
-      revision: fRev.trim(),
-      status: fStatus,
-      uploadedBy: "Vindy",
-      uploadDate: new Date().toISOString().split("T")[0],
-      isCurrent: true,
-      notes: fNotes.trim(),
-    });
-    resetForm();
-    setShowUpload(false);
+    setUploading(true);
+    try {
+      let fileUrl: string | undefined;
+      if (fFile) {
+        fileUrl = await uploadToCloudinary(fFile);
+      }
+      await addDocument({
+        packageId,
+        title: fTitle.trim(),
+        type: fType,
+        revision: fRev.trim(),
+        status: fStatus,
+        uploadedBy: user?.fullName ?? "Unknown",
+        uploadDate: new Date().toISOString().split("T")[0],
+        isCurrent: true,
+        notes: fNotes.trim(),
+        fileUrl,
+      });
+      resetForm();
+      setShowUpload(false);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleUploadRevision = (title: string) => {
@@ -99,6 +129,7 @@ export default function DocumentsTab({ packageId }: { packageId: string }) {
                       <span className="rev-status">{rev.status}</span>
                       <span className="rev-by">{rev.uploadedBy} · {rev.uploadDate}</span>
                       {rev.notes && <span className="rev-notes">{rev.notes}</span>}
+                      {rev.fileUrl && <a className="rev-download" href={rev.fileUrl} target="_blank" rel="noreferrer">⬇ Download</a>}
                     </div>
                   ))}
                 <button className="btn-ghost btn-sm" style={{ marginTop: 8 }} onClick={() => handleUploadRevision(title)}>
@@ -131,11 +162,11 @@ export default function DocumentsTab({ packageId }: { packageId: string }) {
                 </select>
               </label>
               <label>Notes<textarea rows={2} value={fNotes} onChange={(e) => setFNotes(e.target.value)} /></label>
-              <label>File<input type="file" /></label>
+              <label>File (optional){CLOUD_NAME ? <input type="file" onChange={(e) => setFFile(e.target.files?.[0] ?? null)} /> : <span style={{ fontSize: 12, color: "#9ca3af" }}> Cloudinary not configured</span>}</label>
             </div>
             <div className="modal-actions">
               <button className="btn-ghost" onClick={() => { setShowUpload(false); resetForm(); }}>Cancel</button>
-              <button className="btn-primary" onClick={handleUpload} disabled={!fTitle.trim() || !fRev.trim()}>Upload</button>
+              <button className="btn-primary" onClick={handleUpload} disabled={!fTitle.trim() || !fRev.trim() || uploading}>{uploading ? "Uploading..." : "Upload"}</button>
             </div>
           </div>
         </div>

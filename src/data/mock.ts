@@ -49,6 +49,7 @@ export interface Document {
   uploadDate: string;
   isCurrent: boolean;
   notes: string;
+  fileUrl?: string;
 }
 
 export interface Inspection {

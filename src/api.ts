@@ -51,6 +51,8 @@ export const auth = {
 export const workspace = {
   get: (companyId?: string) =>
     request<any>(`/workspace${companyId ? `?companyId=${companyId}` : ""}`),
+  notifications: (approver?: string) =>
+    request<any[]>(`/workspace/notifications${approver ? `?approver=${encodeURIComponent(approver)}` : ""}`),
 };
 
 // ─── Projects ───────────────────────────────────────────────────
