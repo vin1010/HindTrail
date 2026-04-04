@@ -249,11 +249,24 @@ export default function ProjectDetail() {
   const [selectedPkg, setSelectedPkg] = useState<string | null>(null);
   const [showNewPkg, setShowNewPkg] = useState(false);
   const [mobilePanel, setMobilePanel] = useState<"tree" | "detail">("tree");
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+  const [groupsInitialised, setGroupsInitialised] = useState(false);
 
   useEffect(() => {
     loadProjects();
     if (projectId) loadPackages(projectId);
   }, [projectId]);
+
+  // Once packages load, collapse groups by default if there are more than 2 contractors
+  useEffect(() => {
+    if (groupsInitialised || packages.filter((p) => p.projectId === projectId && !p.parentId).length === 0) return;
+    const roots = packages.filter((p) => p.projectId === projectId && !p.parentId);
+    const companies = [...new Set(roots.map((p) => p.ownerCompany || "Unassigned"))];
+    if (companies.length > 2) {
+      setCollapsedGroups(new Set(companies));
+    }
+    setGroupsInitialised(true);
+  }, [packages]);
 
   // Form state
   const [fName, setFName] = useState("");
@@ -292,12 +305,6 @@ export default function ProjectDetail() {
     }
     contractorGroups[seen.get(company)!].packages.push(pkg);
   });
-
-  // Collapse groups by default when there are more than 2 contractors
-  const defaultCollapsed = contractorGroups.length > 2
-    ? new Set(contractorGroups.map((g) => g.company))
-    : new Set<string>();
-  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(defaultCollapsed);
 
   const toggleGroup = (company: string) => {
     setCollapsedGroups((prev) => {
