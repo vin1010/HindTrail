@@ -7,7 +7,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function DocumentsTab({ packageId }: { packageId: string }) {
-  const { documents, addDocument, supersedePreviousRevisions } = useData();
+  const { documents, addDocument } = useData();
   const docs = documents.filter((d) => d.packageId === packageId);
   const [showUpload, setShowUpload] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -29,9 +29,9 @@ export default function DocumentsTab({ packageId }: { packageId: string }) {
     setFTitle(""); setFType("Procedure"); setFRev(""); setFStatus("Draft"); setFNotes("");
   };
 
-  const handleUpload = () => {
+  const handleUpload = async () => {
     if (!fTitle.trim() || !fRev.trim()) return;
-    const newDoc = addDocument({
+    await addDocument({
       packageId,
       title: fTitle.trim(),
       type: fType,
@@ -42,8 +42,6 @@ export default function DocumentsTab({ packageId }: { packageId: string }) {
       isCurrent: true,
       notes: fNotes.trim(),
     });
-    // Auto-supersede previous revisions of same title
-    supersedePreviousRevisions(packageId, fTitle.trim(), newDoc.id);
     resetForm();
     setShowUpload(false);
   };
