@@ -6,8 +6,8 @@
 
 /* Sidebar */
 .wpd-sidebar {
-  background: white;
-  border-right: 1px solid var(--border);
+  background: #1e1f2e;
+  border-right: none;
   padding: 24px 20px;
   display: flex;
   flex-direction: column;
@@ -19,7 +19,7 @@
 .wpd-logo {
   font-size: 20px;
   font-weight: 700;
-  color: var(--primary);
+  color: #fff;
   margin-bottom: 32px;
   cursor: pointer;
   letter-spacing: -0.3px;
@@ -32,15 +32,15 @@
   padding: 10px 14px;
   border-radius: 8px;
   font-size: 14px;
-  color: var(--muted);
+  color: #94a3b8;
   cursor: pointer;
   text-decoration: none;
   margin-bottom: 4px;
   transition: all 0.1s;
 }
 
-.wpd-nav a:hover { background: #f9fafb; color: var(--text); }
-.wpd-nav a.active { background: #eef2ff; color: var(--primary); font-weight: 500; }
+.wpd-nav a:hover { background: rgba(255,255,255,0.07); color: #f1f5f9; }
+.wpd-nav a.active { background: rgba(79,70,229,0.3); color: #a5b4fc; font-weight: 500; }
 
 /* Main content */
 .wpd-main {
@@ -77,7 +77,9 @@
 
 /* Header */
 .wpd-header {
-  margin-bottom: 24px;
+  margin-bottom: 0;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
 }
 
 .wpd-header h1 {
@@ -129,8 +131,9 @@
 }
 
 .wpd-tab-active {
-  color: var(--primary);
-  border-bottom-color: var(--primary);
+  color: #4f46e5;
+  border-bottom-color: #4f46e5;
+  font-weight: 600;
 }
 
 /* Tab content area */

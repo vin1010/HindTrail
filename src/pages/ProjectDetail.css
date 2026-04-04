@@ -6,8 +6,8 @@
 
 /* Sidebar */
 .pd-sidebar {
-  background: white;
-  border-right: 1px solid var(--border);
+  background: #1e1f2e;
+  border-right: none;
   padding: 24px 20px;
   display: flex;
   flex-direction: column;
@@ -19,7 +19,7 @@
 .pd-logo {
   font-size: 20px;
   font-weight: 700;
-  color: var(--primary);
+  color: #fff;
   margin-bottom: 32px;
   cursor: pointer;
   letter-spacing: -0.3px;
@@ -32,15 +32,15 @@
   padding: 10px 14px;
   border-radius: 8px;
   font-size: 14px;
-  color: var(--muted);
+  color: #94a3b8;
   cursor: pointer;
   text-decoration: none;
   margin-bottom: 4px;
   transition: all 0.1s;
 }
 
-.pd-nav a:hover { background: #f9fafb; color: var(--text); }
-.pd-nav a.active { background: #eef2ff; color: var(--primary); font-weight: 500; }
+.pd-nav a:hover { background: rgba(255,255,255,0.07); color: #f1f5f9; }
+.pd-nav a.active { background: rgba(79,70,229,0.3); color: #a5b4fc; font-weight: 500; }
 
 .pd-empty {
   display: flex;
@@ -64,7 +64,7 @@
 .pd-tree-header {
   padding: 20px;
   border-bottom: 1px solid var(--border);
-  background: white;
+  background: linear-gradient(180deg, #fafbff 0%, #fff 100%);
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -223,11 +223,11 @@
 
 /* Contractor groups */
 .contractor-group {
-  margin-bottom: 8px;
-  border: 1px solid var(--border);
+  border: 1px solid #e5e7eb;
   border-radius: 10px;
   overflow: hidden;
-  background: white;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 
 .contractor-group-header {
@@ -236,12 +236,13 @@
   justify-content: space-between;
   padding: 10px 12px;
   cursor: pointer;
-  background: #f9fafb;
+  background: white;
+  border-bottom: 1px solid #f3f4f6;
   transition: background 0.1s;
 }
 
 .contractor-group-header:hover {
-  background: #f3f4f6;
+  background: #fafbff;
 }
 
 .contractor-group-left {

@@ -6,8 +6,8 @@
 
 /* Sidebar */
 .ws-sidebar {
-  background: white;
-  border-right: 1px solid var(--border);
+  background: #1e1f2e;
+  border-right: none;
   padding: 24px 20px;
   display: flex;
   flex-direction: column;
@@ -19,7 +19,7 @@
 .ws-logo {
   font-size: 20px;
   font-weight: 700;
-  color: var(--primary);
+  color: #fff;
   margin-bottom: 32px;
   cursor: pointer;
   letter-spacing: -0.3px;
@@ -32,15 +32,15 @@
   padding: 10px 14px;
   border-radius: 8px;
   font-size: 14px;
-  color: var(--muted);
+  color: #94a3b8;
   cursor: pointer;
   text-decoration: none;
   margin-bottom: 4px;
   transition: all 0.1s;
 }
 
-.ws-nav a:hover { background: #f9fafb; color: var(--text); }
-.ws-nav a.active { background: #eef2ff; color: var(--primary); font-weight: 500; }
+.ws-nav a:hover { background: rgba(255,255,255,0.07); color: #f1f5f9; }
+.ws-nav a.active { background: rgba(79,70,229,0.3); color: #a5b4fc; font-weight: 500; }
 
 .ws-nav-icon {
   font-size: 12px;
@@ -52,7 +52,7 @@
 .ws-user {
   margin-top: auto;
   padding-top: 16px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid rgba(255,255,255,0.1);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -74,12 +74,12 @@
 
 .ws-company-switch select {
   padding: 7px 10px;
-  border: 1px solid var(--border);
+  border: 1px solid rgba(255,255,255,0.1);
   border-radius: 8px;
   font-size: 13px;
   font-family: inherit;
-  color: var(--text);
-  background: white;
+  color: #f1f5f9;
+  background: rgba(255,255,255,0.07);
   cursor: pointer;
   outline: none;
 }
@@ -98,8 +98,8 @@
   width: 34px;
   height: 34px;
   border-radius: 8px;
-  background: #eef2ff;
-  color: var(--primary);
+  background: rgba(79,70,229,0.4);
+  color: #a5b4fc;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -111,12 +111,12 @@
 .ws-user-info strong {
   display: block;
   font-size: 13px;
-  color: var(--text);
+  color: #f1f5f9;
 }
 
 .ws-user-info span {
   font-size: 12px;
-  color: var(--muted);
+  color: #94a3b8;
 }
 
 .ws-logout {
@@ -124,13 +124,13 @@
   border: none;
   padding: 0;
   font-size: 12px;
-  color: var(--muted);
+  color: #64748b;
   cursor: pointer;
   text-align: left;
   font-family: inherit;
 }
 
-.ws-logout:hover { color: #ef4444; }
+.ws-logout:hover { color: #f87171; }
 
 /* Main */
 .ws-main {
@@ -139,18 +139,21 @@
 }
 
 .ws-header {
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 50%, #818cf8 100%);
+  border-radius: 16px;
+  padding: 28px 32px;
   margin-bottom: 28px;
+  color: white;
 }
 
 .ws-header h1 {
-  font-size: 24px;
-  font-weight: 700;
+  color: white;
+  font-size: 22px;
   margin: 0 0 4px;
 }
 
 .ws-header p {
-  font-size: 14px;
-  color: var(--muted);
+  color: rgba(255,255,255,0.75);
   margin: 0;
 }
 
@@ -165,12 +168,20 @@
 .ws-stat-card {
   background: white;
   border: 1px solid var(--border);
+  border-left: 4px solid #e5e7eb;
   border-radius: 12px;
   padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
+
+.ws-stat-card:nth-child(1) { border-left-color: #4f46e5; }
+.ws-stat-card:nth-child(2) { border-left-color: #0891b2; }
+.ws-stat-card:nth-child(3) { border-left-color: #d97706; }
+.ws-stat-card:nth-child(4) { border-left-color: #dc2626; }
+.ws-stat-card:nth-child(5) { border-left-color: #059669; }
+.ws-stat-card:nth-child(6) { border-left-color: #7c3aed; }
 
 .ws-stat-value {
   font-size: 28px;
@@ -354,6 +365,7 @@
   .ws-sidebar { display: none; }
   .ws-main { padding: 20px 16px; }
   .ws-stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .ws-header h1 { font-size: 20px; }
+  .ws-header { padding: 20px; border-radius: 12px; }
+  .ws-header h1 { font-size: 18px; }
   .ws-projects-grid { grid-template-columns: 1fr; }
 }

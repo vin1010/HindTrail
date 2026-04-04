@@ -6,8 +6,8 @@
 
 /* Sidebar */
 .proj-sidebar {
-  background: white;
-  border-right: 1px solid var(--border);
+  background: #1e1f2e;
+  border-right: none;
   padding: 24px 20px;
   display: flex;
   flex-direction: column;
@@ -16,7 +16,7 @@
 .proj-logo {
   font-size: 18px;
   font-weight: 700;
-  color: var(--primary);
+  color: #fff;
   margin-bottom: 32px;
   letter-spacing: -0.3px;
 }
@@ -26,15 +26,17 @@
   padding: 10px 12px;
   border-radius: 8px;
   font-size: 14px;
-  color: var(--muted);
+  color: #94a3b8;
   cursor: pointer;
   text-decoration: none;
   margin-bottom: 4px;
+  transition: all 0.1s;
 }
 
+.proj-nav a:hover { color: #f1f5f9; background: rgba(255,255,255,0.07); }
 .proj-nav a.active {
-  background: #eef2ff;
-  color: var(--primary);
+  background: rgba(79,70,229,0.3);
+  color: #a5b4fc;
   font-weight: 500;
 }
 
@@ -46,7 +48,7 @@
   font-size: 13px;
   color: var(--muted);
   padding-top: 20px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid rgba(255,255,255,0.1);
 }
 
 .proj-user strong {
@@ -124,14 +126,19 @@
   border-radius: 14px;
   padding: 20px 22px;
   border: 1px solid var(--border);
+  border-left: 4px solid #e5e7eb;
   cursor: pointer;
-  transition: box-shadow 0.15s, border-color 0.15s;
+  transition: box-shadow 0.15s, border-color 0.15s, transform 0.1s;
 }
 
 .proj-card:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
-  border-color: #c7d2fe;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.09);
+  transform: translateY(-2px);
 }
+
+.proj-card[data-status="Active"] { border-left-color: #059669; }
+.proj-card[data-status="On Hold"] { border-left-color: #d97706; }
+.proj-card[data-status="Closed"] { border-left-color: #9ca3af; }
 
 .proj-card-header {
   display: flex;

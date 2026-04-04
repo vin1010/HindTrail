@@ -13,7 +13,7 @@ const STATUS_COLORS: Record<ProjectStatus, string> = {
 
 function ProjectCard({ project, onClick }: { project: Project; onClick: () => void }) {
   return (
-    <div className="proj-card" onClick={onClick}>
+    <div className="proj-card" data-status={project.status} onClick={onClick}>
       <div className="proj-card-header">
         <div>
           <span className="proj-code">{project.code}</span>
