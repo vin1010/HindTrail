@@ -13,6 +13,14 @@ const STATUS_COLORS: Record<string, string> = {
   Closed: "pkg-muted",
 };
 
+const STATUS_DOT_COLORS: Record<string, string> = {
+  "In Progress": "#059669",
+  "Awaiting Approval": "#d97706",
+  "Ready for Handover": "#059669",
+  "Not Started": "#9ca3af",
+  "Closed": "#6b7280",
+};
+
 const COMPANY_COLORS = [
   "#4f46e5", "#0891b2", "#059669", "#d97706", "#dc2626",
   "#7c3aed", "#db2777", "#065f46", "#92400e", "#1e40af",
@@ -22,118 +30,89 @@ function getCompanyColor(_name: string, index: number): string {
   return COMPANY_COLORS[index % COMPANY_COLORS.length];
 }
 
-function TreeNode({
-  pkg, level, selectedId, onSelect, getChildren, companyColor,
+function NodeCard({
+  pkg, projectLocation, selectedId, onSelect, onAddSub, getChildren,
 }: {
-  pkg: WorkPackage; level: number; selectedId: string | null;
+  pkg: WorkPackage;
+  projectLocation: string;
+  selectedId: string | null;
   onSelect: (id: string) => void;
+  onAddSub: (parentId: string) => void;
   getChildren: (parentId: string | null, projectId: string) => WorkPackage[];
-  companyColor?: string;
 }) {
   const [expanded, setExpanded] = useState(true);
   const children = getChildren(pkg.id, pkg.projectId);
-  const hasChildren = children.length > 0;
   const isSelected = selectedId === pkg.id;
-
-  // Group children by ownerCompany for subcontractor visibility
-  const childCompanies = [...new Set(children.map((c) => c.ownerCompany))];
-  const groupByCompany = childCompanies.length > 1 || (childCompanies.length === 1 && childCompanies[0] !== pkg.ownerCompany);
+  const dotColor = STATUS_DOT_COLORS[pkg.status] ?? "#9ca3af";
 
   return (
-    <div className="tree-node" style={{ paddingLeft: level * 20 }}>
+    <div className="node-card-wrapper">
       <div
-        className={`tree-node-row ${isSelected ? "tree-selected" : ""}`}
+        className={`node-card ${isSelected ? "node-card-selected" : ""}`}
         onClick={() => onSelect(pkg.id)}
-        style={companyColor ? { borderLeft: `3px solid ${companyColor}`, paddingLeft: 8 } : {}}
       >
-        {hasChildren ? (
-          <button className="tree-toggle" onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}>
-            {expanded ? "▾" : "▸"}
-          </button>
-        ) : (
-          <span className="tree-toggle tree-leaf">–</span>
-        )}
-        <div className="tree-node-info">
-          <span className="tree-code">{pkg.code}</span>
-          <span className="tree-name">{pkg.name}</span>
-          {level > 0 && pkg.ownerCompany && (
-            <span className="tree-sub-company">{pkg.ownerCompany}</span>
+        <div className="node-card-header">
+          <div className="node-card-title">
+            <span className="node-card-code">{pkg.code}</span>
+            <span className="node-card-name">{pkg.name}</span>
+          </div>
+          {children.length > 0 && (
+            <button
+              className="node-expand-btn"
+              onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
+            >
+              {expanded ? "▾" : "▸"}
+            </button>
           )}
         </div>
-        <span className={`tree-status ${STATUS_COLORS[pkg.status]}`}>{pkg.status}</span>
-      </div>
-      {expanded && hasChildren && (
-        <div className="tree-children">
-          {groupByCompany
-            ? childCompanies.map((company) => {
-                const groupChildren = children.filter((c) => c.ownerCompany === company);
-                const isSubcontractor = company !== pkg.ownerCompany;
-                return (
-                  <div key={company} className="tree-sub-group">
-                    {isSubcontractor && (
-                      <div className="tree-sub-group-label">
-                        <span className="tree-sub-arrow">↳</span>
-                        <span className="tree-sub-name">{company}</span>
-                        <span className="tree-sub-badge">Subcontractor</span>
-                      </div>
-                    )}
-                    {groupChildren.map((child) => (
-                      <TreeNode
-                        key={child.id} pkg={child} level={level + 1}
-                        selectedId={selectedId} onSelect={onSelect} getChildren={getChildren}
-                      />
-                    ))}
-                  </div>
-                );
-              })
-            : children.map((child) => (
-                <TreeNode
-                  key={child.id} pkg={child} level={level + 1}
-                  selectedId={selectedId} onSelect={onSelect} getChildren={getChildren}
-                />
-              ))
-          }
+
+        <div className="node-card-status-row">
+          <span className="node-status-dot" style={{ background: dotColor }} />
+          <span className="node-status-text">{pkg.status}</span>
+          {pkg.responsible && (
+            <span className="node-card-meta">{pkg.responsible}</span>
+          )}
+          {pkg.dueDate && (
+            <span className="node-card-meta node-card-due">Due {pkg.dueDate}</span>
+          )}
         </div>
-      )}
-    </div>
-  );
-}
 
-function ContractorGroup({
-  company, color, packages, selectedId, onSelect, getChildren, defaultExpanded,
-}: {
-  company: string; color: string; packages: WorkPackage[];
-  selectedId: string | null; onSelect: (id: string) => void;
-  getChildren: (parentId: string | null, projectId: string) => WorkPackage[];
-  defaultExpanded: boolean;
-}) {
-  const [expanded, setExpanded] = useState(defaultExpanded);
-  const total = packages.length;
-  const inProgress = packages.filter((p) => p.status === "In Progress").length;
+        {pkg.ownerCompany && (
+          <div className="node-card-company">{pkg.ownerCompany}</div>
+        )}
 
-  return (
-    <div className="contractor-group">
-      <div className="contractor-group-header" onClick={() => setExpanded(!expanded)}>
-        <div className="contractor-group-left">
-          <span className="contractor-color-dot" style={{ backgroundColor: color }} />
-          <div>
-            <span className="contractor-group-name">{company}</span>
-            <span className="contractor-role-badge">Prime Contractor</span>
+        {projectLocation && (
+          <div className="node-card-location">
+            <span className="node-location-icon">📍</span>
+            {projectLocation}
           </div>
-        </div>
-        <div className="contractor-group-right">
-          <span className="contractor-pkg-count">{total} pkg{total !== 1 ? "s" : ""}</span>
-          {inProgress > 0 && <span className="contractor-active-dot" />}
-          <span className="contractor-toggle">{expanded ? "▾" : "▸"}</span>
+        )}
+
+        <div className="node-card-footer">
+          <div className="node-card-people">
+            <span className="node-people-icon">👤</span>
+            <span className="node-people-count">–</span>
+          </div>
+          <button
+            className="node-add-sub-btn"
+            onClick={(e) => { e.stopPropagation(); onAddSub(pkg.id); }}
+          >
+            + Add Subcontractor
+          </button>
         </div>
       </div>
-      {expanded && (
-        <div className="contractor-group-body">
-          {packages.map((pkg) => (
-            <TreeNode
-              key={pkg.id} pkg={pkg} level={0}
-              selectedId={selectedId} onSelect={onSelect} getChildren={getChildren}
-              companyColor={color}
+
+      {expanded && children.length > 0 && (
+        <div className="node-children">
+          {children.map((child) => (
+            <NodeCard
+              key={child.id}
+              pkg={child}
+              projectLocation={projectLocation}
+              selectedId={selectedId}
+              onSelect={onSelect}
+              onAddSub={onAddSub}
+              getChildren={getChildren}
             />
           ))}
         </div>
@@ -371,20 +350,28 @@ export default function ProjectDetail() {
           <button className="btn-primary btn-sm" onClick={() => setShowNewPkg(true)}>+ Package</button>
         </div>
         <div className="pd-tree-body">
-          {contractorGroups.length === 0 ? (
-            <p className="pd-tree-empty">No work packages yet. Create one to get started.</p>
+          {rootPackages.length === 0 ? (
+            <p className="pd-tree-empty">No work packages yet.</p>
           ) : (
             contractorGroups.map((group) => (
-              <ContractorGroup
-                key={group.company}
-                company={group.company}
-                color={group.color}
-                packages={group.packages}
-                selectedId={selectedPkg}
-                onSelect={(id) => { setSelectedPkg(id); setMobilePanel("detail"); }}
-                getChildren={getChildren}
-                defaultExpanded={contractorGroups.length <= 2}
-              />
+              <div key={group.company} className="node-contractor-section">
+                <div className="node-contractor-label">
+                  <span className="node-contractor-dot" style={{ background: group.color }} />
+                  <span className="node-contractor-name">{group.company}</span>
+                  <span className="node-contractor-badge">Prime Contractor</span>
+                </div>
+                {group.packages.map((pkg) => (
+                  <NodeCard
+                    key={pkg.id}
+                    pkg={pkg}
+                    projectLocation={project.location}
+                    selectedId={selectedPkg}
+                    onSelect={(id) => { setSelectedPkg(id); setMobilePanel("detail"); }}
+                    onAddSub={(parentId) => { setFParent(parentId); setShowNewPkg(true); }}
+                    getChildren={getChildren}
+                  />
+                ))}
+              </div>
             ))
           )}
         </div>
