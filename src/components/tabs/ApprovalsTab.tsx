@@ -78,7 +78,7 @@ export default function ApprovalsTab({ packageId }: { packageId: string }) {
             </div>
             <div className="modal-actions">
               <button className="btn-ghost" onClick={() => { setCommentingId(null); setComment(""); }}>Cancel</button>
-              <button className="btn-reject" onClick={confirmReject}>Confirm Rejection</button>
+              <button className="btn-reject" onClick={confirmReject} disabled={!comment.trim()}>Confirm Rejection</button>
             </div>
           </div>
         </div>

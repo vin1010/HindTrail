@@ -157,7 +157,7 @@
 /* Stats */
 .ws-stats {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
   margin-bottom: 32px;
 }
@@ -185,6 +185,39 @@
 
 .ws-stat-warning .ws-stat-value { color: #d97706; }
 .ws-stat-alert .ws-stat-value { color: #dc2626; }
+
+.ws-stat-skeleton {
+  background: #f9fafb;
+  opacity: 0.6;
+}
+
+/* Status breakdown */
+.ws-status-breakdown {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.ws-status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.ws-status-row:last-child { border-bottom: none; }
+
+.ws-status-name {
+  color: var(--text);
+}
+
+.ws-status-count {
+  font-weight: 600;
+  color: var(--primary);
+}
 
 /* Sections */
 .ws-section {

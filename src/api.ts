@@ -110,3 +110,10 @@ export const members = {
   update: (id: string, data: any) => request<any>(`/members/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
   remove: (id: string) => request<any>(`/members/${id}`, { method: "DELETE" }),
 };
+
+// ─── Comments ───────────────────────────────────────────────────
+export const comments = {
+  list: (packageId: string) => request<any[]>(`/comments?packageId=${packageId}`),
+  create: (packageId: string, text: string) =>
+    request<any>("/comments", { method: "POST", body: JSON.stringify({ packageId, text }) }),
+};

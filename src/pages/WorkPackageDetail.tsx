@@ -10,9 +10,10 @@ import ApprovalsTab from "../components/tabs/ApprovalsTab";
 import ActivityTab from "../components/tabs/ActivityTab";
 import PermissionsTab from "../components/tabs/PermissionsTab";
 import ExportTab from "../components/tabs/ExportTab";
+import NotesTab from "../components/tabs/NotesTab";
 import "./WorkPackageDetail.css";
 
-const TABS = ["Overview", "Documents", "Inspections", "Issues", "Approvals", "Activity", "Permissions", "Export Pack"] as const;
+const TABS = ["Overview", "Documents", "Inspections", "Issues", "Approvals", "Activity", "Notes", "Permissions", "Export Pack"] as const;
 type TabName = (typeof TABS)[number];
 
 const STATUS_COLORS: Record<string, string> = {
@@ -26,15 +27,29 @@ export default function WorkPackageDetail() {
   const { user, logout } = useAuth();
   const { projects, packages, loadProjects, loadPackages, loadPackageData } = useData();
   const [activeTab, setActiveTab] = useState<TabName>("Overview");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadProjects();
-    if (projectId) loadPackages(projectId);
-    if (packageId) loadPackageData(packageId);
+    setIsLoading(true);
+    Promise.all([
+      loadProjects(),
+      projectId ? loadPackages(projectId) : Promise.resolve(),
+      packageId ? loadPackageData(packageId) : Promise.resolve(),
+    ]).finally(() => setIsLoading(false));
   }, [projectId, packageId]);
 
   const project = projects.find((p) => p.id === projectId);
   const pkg = packages.find((wp) => wp.id === packageId);
+
+  if (isLoading) {
+    return (
+      <div className="wpd-layout">
+        <div className="pd-empty">
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!project || !pkg) {
     return (
@@ -57,6 +72,7 @@ export default function WorkPackageDetail() {
       case "Issues": return <IssuesTab packageId={pkg!.id} />;
       case "Approvals": return <ApprovalsTab packageId={pkg!.id} />;
       case "Activity": return <ActivityTab packageId={pkg!.id} />;
+      case "Notes": return <NotesTab packageId={pkg!.id} />;
       case "Permissions": return <PermissionsTab packageId={pkg!.id} />;
       case "Export Pack": return <ExportTab pkg={pkg!} />;
     }

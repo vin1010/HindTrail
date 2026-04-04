@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { DataProvider } from "./context/DataContext";
+import { ToastProvider } from "./components/Toast";
 import Login from "./pages/Login";
 import Onboarding from "./pages/Onboarding";
 import Workspace from "./pages/Workspace";
@@ -88,6 +89,7 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <DataProvider>
+          <ToastProvider />
           <AppRoutes />
         </DataProvider>
       </AuthProvider>

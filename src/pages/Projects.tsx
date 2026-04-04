@@ -39,7 +39,7 @@ function ProjectCard({ project, onClick }: { project: Project; onClick: () => vo
 export default function Projects() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const { projects, addProject, loadProjects } = useData();
+  const { projects, addProject, loadProjects, loading } = useData();
   const [search, setSearch] = useState("");
 
   useEffect(() => { loadProjects(); }, []);
@@ -131,11 +131,14 @@ export default function Projects() {
         />
 
         <div className="proj-grid">
-          {filtered.map((p) => (
-            <ProjectCard key={p.id} project={p} onClick={() => navigate(`/projects/${p.id}`)} />
-          ))}
-          {filtered.length === 0 && (
-            <p className="proj-empty">No projects match your search.</p>
+          {loading ? (
+            <p className="proj-empty">Loading projects...</p>
+          ) : filtered.length === 0 ? (
+            <p className="proj-empty">{search ? "No projects match your search." : "No projects yet. Create one to get started."}</p>
+          ) : (
+            filtered.map((p) => (
+              <ProjectCard key={p.id} project={p} onClick={() => navigate(`/projects/${p.id}`)} />
+            ))
           )}
         </div>
       </main>

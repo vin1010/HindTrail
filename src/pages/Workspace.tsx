@@ -8,15 +8,27 @@ export default function Workspace() {
   const { user, logout, setActiveCompany } = useAuth();
   const { projects, loadWorkspaceData } = useData();
   const navigate = useNavigate();
-  const [stats, setStats] = useState({ openIssues: 0, pendingApprovals: 0, inProgressPkgs: 0 });
+  const [stats, setStats] = useState({
+    openIssues: 0,
+    pendingApprovals: 0,
+    inProgressPkgs: 0,
+    totalPackages: 0,
+    closedPackages: 0,
+    totalDocs: 0,
+    packagesByStatus: {} as Record<string, number>,
+  });
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
+  const [statsLoading, setStatsLoading] = useState(true);
 
   useEffect(() => {
     if (user?.activeCompanyId) {
-      loadWorkspaceData(user.activeCompanyId).then((data) => {
-        setStats(data.stats);
-        setRecentActivity(data.recentActivity);
-      });
+      setStatsLoading(true);
+      loadWorkspaceData(user.activeCompanyId)
+        .then((data) => {
+          setStats(data.stats);
+          setRecentActivity(data.recentActivity);
+        })
+        .finally(() => setStatsLoading(false));
     }
   }, [user?.activeCompanyId]);
 
@@ -58,11 +70,38 @@ export default function Workspace() {
         </div>
 
         <div className="ws-stats">
-          <div className="ws-stat-card"><span className="ws-stat-value">{activeProjects.length}</span><span className="ws-stat-label">Active Projects</span></div>
-          <div className="ws-stat-card"><span className="ws-stat-value">{stats.inProgressPkgs}</span><span className="ws-stat-label">Packages In Progress</span></div>
-          <div className="ws-stat-card ws-stat-warning"><span className="ws-stat-value">{stats.openIssues}</span><span className="ws-stat-label">Open Issues</span></div>
-          <div className="ws-stat-card ws-stat-alert"><span className="ws-stat-value">{stats.pendingApprovals}</span><span className="ws-stat-label">Pending Approvals</span></div>
+          {statsLoading ? (
+            Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="ws-stat-card ws-stat-skeleton">
+                <span className="ws-stat-value">—</span>
+                <span className="ws-stat-label">Loading...</span>
+              </div>
+            ))
+          ) : (
+            <>
+              <div className="ws-stat-card"><span className="ws-stat-value">{activeProjects.length}</span><span className="ws-stat-label">Active Projects</span></div>
+              <div className="ws-stat-card"><span className="ws-stat-value">{stats.totalPackages}</span><span className="ws-stat-label">Total Packages</span></div>
+              <div className="ws-stat-card"><span className="ws-stat-value">{stats.inProgressPkgs}</span><span className="ws-stat-label">Packages In Progress</span></div>
+              <div className="ws-stat-card"><span className="ws-stat-value">{stats.closedPackages}</span><span className="ws-stat-label">Packages Closed</span></div>
+              <div className="ws-stat-card ws-stat-warning"><span className="ws-stat-value">{stats.openIssues}</span><span className="ws-stat-label">Open Issues</span></div>
+              <div className="ws-stat-card ws-stat-alert"><span className="ws-stat-value">{stats.pendingApprovals}</span><span className="ws-stat-label">Pending Approvals</span></div>
+            </>
+          )}
         </div>
+
+        {!statsLoading && Object.keys(stats.packagesByStatus).length > 0 && (
+          <section className="ws-section">
+            <h2>Packages by Status</h2>
+            <div className="ws-status-breakdown">
+              {["Not Started", "In Progress", "Awaiting Approval", "Ready for Handover", "Closed"].map((s) => (
+                <div key={s} className="ws-status-row">
+                  <span className="ws-status-name">{s}</span>
+                  <span className="ws-status-count">{stats.packagesByStatus[s] ?? 0}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="ws-section">
           <div className="ws-section-header">

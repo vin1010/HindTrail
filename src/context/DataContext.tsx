@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
 import * as api from "../api";
+import { showToast } from "../components/Toast";
 import type {
   Project, WorkPackage, Document, Inspection, Issue,
   Approval, ActivityEntry, PackageMember,
@@ -17,6 +18,7 @@ interface DataState {
   approvals: Approval[];
   activity: ActivityEntry[];
   members: PackageMember[];
+  comments: any[];
   loading: boolean;
 
   // Loaders
@@ -55,6 +57,10 @@ interface DataState {
   // Activity
   logActivity: (entry: Omit<ActivityEntry, "id" | "timestamp">) => Promise<void>;
 
+  // Comment actions
+  loadComments: (packageId: string) => Promise<void>;
+  addComment: (packageId: string, text: string) => Promise<void>;
+
   // Helpers
   getChildren: (parentId: string | null, projectId: string) => WorkPackage[];
 }
@@ -70,6 +76,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [approvals, setApprovals] = useState<Approval[]>([]);
   const [activity, setActivity] = useState<ActivityEntry[]>([]);
   const [members, setMembers] = useState<PackageMember[]>([]);
+  const [comments, setComments] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
   // ─── Loaders ──────────────────────────────────────────────────
@@ -87,26 +94,37 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const loadPackageData = useCallback(async (packageId: string) => {
-    const [docs, insps, iss, apprs, acts, mems] = await Promise.all([
-      api.documents.list(packageId),
-      api.inspections.list(packageId),
-      api.issues.list(packageId),
-      api.approvals.list(packageId),
-      api.activity.list(packageId),
-      api.members.list(packageId),
-    ]);
-    setDocuments(docs);
-    setInspections(insps);
-    setIssues(iss);
-    setApprovals(apprs);
-    setActivity(acts);
-    setMembers(mems);
+    try {
+      const [docs, insps, iss, apprs, acts, mems, comms] = await Promise.all([
+        api.documents.list(packageId),
+        api.inspections.list(packageId),
+        api.issues.list(packageId),
+        api.approvals.list(packageId),
+        api.activity.list(packageId),
+        api.members.list(packageId),
+        api.comments.list(packageId),
+      ]);
+      setDocuments(docs);
+      setInspections(insps);
+      setIssues(iss);
+      setApprovals(apprs);
+      setActivity(acts);
+      setMembers(mems);
+      setComments(comms);
+    } catch (err: any) {
+      showToast(err.message || "Failed to load package data");
+    }
   }, []);
 
   const loadWorkspaceData = useCallback(async (companyId?: string) => {
-    const data = await api.workspace.get(companyId);
-    setProjects(data.projects);
-    return { stats: data.stats, recentActivity: data.recentActivity };
+    try {
+      const data = await api.workspace.get(companyId);
+      setProjects(data.projects);
+      return { stats: data.stats, recentActivity: data.recentActivity };
+    } catch (err: any) {
+      showToast(err.message || "Failed to load workspace data");
+      return { stats: {}, recentActivity: [] };
+    }
   }, []);
 
   // ─── Log activity helper ─────────────────────────────────────
@@ -116,6 +134,21 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setActivity((prev) => [created, ...prev]);
     } catch { /* non-blocking */ }
   };
+
+  // ─── Comments ─────────────────────────────────────────────────
+  const loadComments = useCallback(async (packageId: string) => {
+    const data = await api.comments.list(packageId);
+    setComments(data);
+  }, []);
+
+  const addComment = useCallback(async (packageId: string, text: string) => {
+    try {
+      const created = await api.comments.create(packageId, text);
+      setComments((prev) => [created, ...prev]);
+    } catch (err: any) {
+      showToast(err.message || "Failed to post comment");
+    }
+  }, []);
 
   // ─── Projects ─────────────────────────────────────────────────
   const addProject = async (p: Omit<Project, "id">): Promise<Project> => {
@@ -240,13 +273,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
   return (
     <DataContext.Provider
       value={{
-        projects, packages, documents, inspections, issues, approvals, activity, members, loading,
+        projects, packages, documents, inspections, issues, approvals, activity, members, comments, loading,
         loadProjects, loadPackages, loadPackageData, loadWorkspaceData,
         addProject, addPackage, updatePackageStatus,
         addDocument, addInspection, updateInspectionResult,
         addIssue, updateIssueStatus, addApproval, decideApproval,
         addMember, removeMember, updateMemberRole,
-        logActivity, getChildren,
+        logActivity, loadComments, addComment, getChildren,
       }}
     >
       {children}
