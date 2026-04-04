@@ -293,6 +293,21 @@ export default function ProjectDetail() {
     contractorGroups[seen.get(company)!].packages.push(pkg);
   });
 
+  // Collapse groups by default when there are more than 2 contractors
+  const defaultCollapsed = contractorGroups.length > 2
+    ? new Set(contractorGroups.map((g) => g.company))
+    : new Set<string>();
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(defaultCollapsed);
+
+  const toggleGroup = (company: string) => {
+    setCollapsedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(company)) next.delete(company);
+      else next.add(company);
+      return next;
+    });
+  };
+
   const resetForm = () => {
     setFName(""); setFCode(""); setFParent(""); setFOwner(""); setFResp(""); setFDue(""); setFDesc("");
   };
@@ -353,26 +368,41 @@ export default function ProjectDetail() {
           {rootPackages.length === 0 ? (
             <p className="pd-tree-empty">No work packages yet.</p>
           ) : (
-            contractorGroups.map((group) => (
-              <div key={group.company} className="node-contractor-section">
-                <div className="node-contractor-label">
-                  <span className="node-contractor-dot" style={{ background: group.color }} />
-                  <span className="node-contractor-name">{group.company}</span>
-                  <span className="node-contractor-badge">Prime Contractor</span>
+            contractorGroups.map((group) => {
+              const isCollapsed = collapsedGroups.has(group.company);
+              const inProgressCount = group.packages.filter((p) => p.status === "In Progress").length;
+              const awaitingCount = group.packages.filter((p) => p.status === "Awaiting Approval").length;
+              return (
+                <div key={group.company} className="node-contractor-section">
+                  <div className="node-contractor-label node-contractor-label-toggle" onClick={() => toggleGroup(group.company)}>
+                    <span className="node-contractor-dot" style={{ background: group.color }} />
+                    <span className="node-contractor-name">{group.company}</span>
+                    <span className="node-contractor-badge">Prime Contractor</span>
+                    <div className="node-contractor-right">
+                      {isCollapsed && (
+                        <span className="node-contractor-summary">
+                          {group.packages.length} pkg{group.packages.length !== 1 ? "s" : ""}
+                          {inProgressCount > 0 && <span className="nc-dot-blue" />}
+                          {awaitingCount > 0 && <span className="nc-dot-amber" />}
+                        </span>
+                      )}
+                      <span className="node-contractor-chevron">{isCollapsed ? "▸" : "▾"}</span>
+                    </div>
+                  </div>
+                  {!isCollapsed && group.packages.map((pkg) => (
+                    <NodeCard
+                      key={pkg.id}
+                      pkg={pkg}
+                      projectLocation={project.location}
+                      selectedId={selectedPkg}
+                      onSelect={(id) => { setSelectedPkg(id); setMobilePanel("detail"); }}
+                      onAddSub={(parentId) => { setFParent(parentId); setShowNewPkg(true); }}
+                      getChildren={getChildren}
+                    />
+                  ))}
                 </div>
-                {group.packages.map((pkg) => (
-                  <NodeCard
-                    key={pkg.id}
-                    pkg={pkg}
-                    projectLocation={project.location}
-                    selectedId={selectedPkg}
-                    onSelect={(id) => { setSelectedPkg(id); setMobilePanel("detail"); }}
-                    onAddSub={(parentId) => { setFParent(parentId); setShowNewPkg(true); }}
-                    getChildren={getChildren}
-                  />
-                ))}
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>
