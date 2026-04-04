@@ -31,6 +31,7 @@ export interface WorkPackage {
   parentId: string | null;
   name: string;
   code: string;
+  ownerCompanyId?: string;
   ownerCompany: string;
   responsible: string;
   dueDate: string;

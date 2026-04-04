@@ -30,8 +30,10 @@ function getCompanyColor(_name: string, index: number): string {
   return COMPANY_COLORS[index % COMPANY_COLORS.length];
 }
 
+type ViewerRole = "client" | "prime" | "subcontractor";
+
 function NodeCard({
-  pkg, projectLocation, selectedId, onSelect, onAddSub, getChildren,
+  pkg, projectLocation, selectedId, onSelect, onAddSub, getChildren, viewerRole,
 }: {
   pkg: WorkPackage;
   projectLocation: string;
@@ -39,9 +41,11 @@ function NodeCard({
   onSelect: (id: string) => void;
   onAddSub: (parentId: string) => void;
   getChildren: (parentId: string | null, projectId: string) => WorkPackage[];
+  viewerRole: ViewerRole;
 }) {
   const [expanded, setExpanded] = useState(true);
-  const children = getChildren(pkg.id, pkg.projectId);
+  // Clients never see subcontractor children
+  const children = viewerRole === "client" ? [] : getChildren(pkg.id, pkg.projectId);
   const isSelected = selectedId === pkg.id;
   const dotColor = STATUS_DOT_COLORS[pkg.status] ?? "#9ca3af";
 
@@ -93,12 +97,14 @@ function NodeCard({
             <span className="node-people-icon">👤</span>
             <span className="node-people-count">–</span>
           </div>
-          <button
-            className="node-add-sub-btn"
-            onClick={(e) => { e.stopPropagation(); onAddSub(pkg.id); }}
-          >
-            + Add Subcontractor
-          </button>
+          {viewerRole === "prime" && (
+            <button
+              className="node-add-sub-btn"
+              onClick={(e) => { e.stopPropagation(); onAddSub(pkg.id); }}
+            >
+              + Add Subcontractor
+            </button>
+          )}
         </div>
       </div>
 
@@ -113,6 +119,7 @@ function NodeCard({
               onSelect={onSelect}
               onAddSub={onAddSub}
               getChildren={getChildren}
+              viewerRole={viewerRole}
             />
           ))}
         </div>
@@ -122,18 +129,21 @@ function NodeCard({
 }
 
 function TeamsOverview({
-  project, packages,
+  project, packages, viewerRole,
 }: {
-  project: any; packages: WorkPackage[];
+  project: any; packages: WorkPackage[]; viewerRole: ViewerRole;
 }) {
   const rootPkgs = packages.filter((p) => !p.parentId);
   const primeContractors = [...new Set(rootPkgs.map((p) => p.ownerCompany))].filter(Boolean);
 
   // Find subcontractors: companies that own child packages but not root packages
   const childPkgs = packages.filter((p) => p.parentId);
-  const subContractors = [...new Set(childPkgs.map((p) => p.ownerCompany))].filter(
-    (c) => !primeContractors.includes(c) && Boolean(c)
-  );
+  // Clients and subcontractors don't see the subcontractor list
+  const subContractors = viewerRole === "prime"
+    ? [...new Set(childPkgs.map((p) => p.ownerCompany))].filter(
+        (c) => !primeContractors.includes(c) && Boolean(c)
+      )
+    : [];
 
   const totalPkgs = packages.length;
   const openPkgs = packages.filter((p) => p.status !== "Closed").length;
@@ -161,17 +171,19 @@ function TeamsOverview({
       </div>
 
       <div className="teams-hierarchy">
-        {/* Client */}
-        <div className="teams-row teams-row-client">
-          <div className="teams-role-label">Client</div>
-          <div className="teams-company-card teams-client">
-            <div className="teams-company-icon">C</div>
-            <div>
-              <div className="teams-company-name">{project.client || project.clientName}</div>
-              <div className="teams-company-meta">Project Owner</div>
+        {/* Client — hidden from subcontractors */}
+        {viewerRole !== "subcontractor" && (
+          <div className="teams-row teams-row-client">
+            <div className="teams-role-label">Client</div>
+            <div className="teams-company-card teams-client">
+              <div className="teams-company-icon">C</div>
+              <div>
+                <div className="teams-company-name">{project.client || project.clientName}</div>
+                <div className="teams-company-meta">Project Owner</div>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Connector */}
         {primeContractors.length > 0 && (
@@ -294,10 +306,41 @@ export default function ProjectDetail() {
   const activeCompany = user?.memberships.find((m) => m.id === user.activeCompanyId);
   const projectPackages = packages.filter((wp) => wp.projectId === projectId);
 
-  // Group root packages by ownerCompany
+  // ── Role-based visibility ──────────────────────────────────────
+  // client   → sees only prime contractor packages, no sub scope
+  // prime    → sees everything
+  // subcontractor → sees only their own packages, no client info
+  const viewerRole: ViewerRole = (() => {
+    if (!activeCompany) return "prime";
+    if (activeCompany.type === "client") return "client";
+    const ownsRootPkg = rootPackages.some(
+      (p) => p.ownerCompany === activeCompany.name || p.ownerCompanyId === activeCompany.id
+    );
+    return ownsRootPkg ? "prime" : "subcontractor";
+  })();
+
+  // Packages visible to this viewer
+  const visibleProjectPackages =
+    viewerRole === "subcontractor"
+      ? projectPackages.filter(
+          (p) => p.ownerCompany === activeCompany?.name || p.ownerCompanyId === activeCompany?.id
+        )
+      : projectPackages;
+
+  // For subcontractors: show their packages as root-level groups (they have no root packages)
+  const treeRootPackages =
+    viewerRole === "subcontractor"
+      ? visibleProjectPackages.filter((p) => {
+          // show top of their visible scope: packages whose parent is NOT owned by them
+          const parent = packages.find((x) => x.id === p.parentId);
+          return !parent || (parent.ownerCompany !== activeCompany?.name && parent.ownerCompanyId !== activeCompany?.id);
+        })
+      : rootPackages;
+
+  // Group tree root packages by ownerCompany
   const contractorGroups: { company: string; color: string; packages: WorkPackage[] }[] = [];
   const seen = new Map<string, number>();
-  rootPackages.forEach((pkg) => {
+  treeRootPackages.forEach((pkg) => {
     const company = pkg.ownerCompany || "Unassigned";
     if (!seen.has(company)) {
       seen.set(company, contractorGroups.length);
@@ -365,8 +408,12 @@ export default function ProjectDetail() {
             <span className="pd-proj-code">{project.code}</span>
             <h2>{project.name}</h2>
             <div className="pd-proj-meta">
-              <span className="pd-client-badge">Client: {project.client || (project as any).clientName}</span>
-              <span className="dot">&middot;</span>
+              {viewerRole !== "subcontractor" && (
+                <>
+                  <span className="pd-client-badge">Client: {project.client || (project as any).clientName}</span>
+                  <span className="dot">&middot;</span>
+                </>
+              )}
               <span>{project.location}</span>
             </div>
           </div>
@@ -406,6 +453,7 @@ export default function ProjectDetail() {
                       onSelect={(id) => { setSelectedPkg(id); setMobilePanel("detail"); }}
                       onAddSub={(parentId) => { setFParent(parentId); setShowNewPkg(true); }}
                       getChildren={getChildren}
+                      viewerRole={viewerRole}
                     />
                   ))}
                 </div>
@@ -444,7 +492,8 @@ export default function ProjectDetail() {
         ) : (
           <TeamsOverview
             project={project}
-            packages={projectPackages}
+            packages={visibleProjectPackages}
+            viewerRole={viewerRole}
           />
         )}
       </div>

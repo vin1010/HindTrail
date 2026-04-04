@@ -40,6 +40,18 @@ export default function WorkPackageDetail() {
 
   const project = projects.find((p) => p.id === projectId);
   const pkg = packages.find((wp) => wp.id === packageId);
+  const activeCompany = user?.memberships.find((m) => m.id === user.activeCompanyId);
+
+  // Determine viewer role on this package
+  const projectRootPkgs = packages.filter((p) => p.projectId === projectId && !p.parentId);
+  const viewerRole: "client" | "prime" | "subcontractor" = (() => {
+    if (!activeCompany) return "prime";
+    if (activeCompany.type === "client") return "client";
+    const ownsRoot = projectRootPkgs.some(
+      (p) => p.ownerCompany === activeCompany.name || p.ownerCompanyId === activeCompany.id
+    );
+    return ownsRoot ? "prime" : "subcontractor";
+  })();
 
   if (isLoading) {
     return (
@@ -62,7 +74,22 @@ export default function WorkPackageDetail() {
     );
   }
 
-  const activeCompany = user?.memberships.find((m) => m.id === user.activeCompanyId);
+  // Subcontractor trying to open a package they don't own
+  if (
+    viewerRole === "subcontractor" &&
+    pkg.ownerCompany !== activeCompany?.name &&
+    pkg.ownerCompanyId !== activeCompany?.id
+  ) {
+    return (
+      <div className="wpd-layout">
+        <div className="pd-empty">
+          <h2>Access Restricted</h2>
+          <p style={{ color: "var(--muted)", marginTop: 8 }}>You don't have permission to view this work package.</p>
+          <button className="btn-primary" style={{ marginTop: 16 }} onClick={() => navigate(`/projects/${projectId}`)}>Back to Project</button>
+        </div>
+      </div>
+    );
+  }
 
   function renderTab() {
     switch (activeTab) {
@@ -105,7 +132,7 @@ export default function WorkPackageDetail() {
         <div className="wpd-breadcrumb">
           <span className="wpd-bc-link" onClick={() => navigate("/projects")}>Projects</span>
           <span className="wpd-bc-sep">/</span>
-          <span className="wpd-bc-link" onClick={() => navigate(`/projects/${projectId}`)}>{project.code}</span>
+          <span className="wpd-bc-link" onClick={() => navigate(`/projects/${projectId}`)}>{viewerRole === "subcontractor" ? "Project" : project.code}</span>
           <span className="wpd-bc-sep">/</span>
           <span className="wpd-bc-current">{pkg.code}</span>
         </div>
