@@ -345,6 +345,7 @@ export default function ProjectDetail() {
           <a onClick={() => navigate("/workspace")}><span className="ws-nav-icon">&#9632;</span> Dashboard</a>
           <a onClick={() => navigate("/projects")}><span className="ws-nav-icon">&#9645;</span> Projects</a>
           <a className="active"><span className="ws-nav-icon">&#9659;</span> {project.code}</a>
+          <a onClick={() => navigate("/help")}><span className="ws-nav-icon">&#9432;</span> Help & Docs</a>
         </nav>
         <div className="ws-user">
           <div className="ws-user-info">

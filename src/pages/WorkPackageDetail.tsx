@@ -87,6 +87,7 @@ export default function WorkPackageDetail() {
           <a onClick={() => navigate("/projects")}><span className="ws-nav-icon">&#9645;</span> Projects</a>
           <a onClick={() => navigate(`/projects/${projectId}`)}><span className="ws-nav-icon">&#9659;</span> {project.code}</a>
           <a className="active"><span className="ws-nav-icon">&#9654;</span> {pkg.code}</a>
+          <a onClick={() => navigate("/help")}><span className="ws-nav-icon">&#9432;</span> Help & Docs</a>
         </nav>
         <div className="ws-user">
           <div className="ws-user-info">
