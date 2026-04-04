@@ -348,3 +348,12 @@
   font-size: 12px;
   color: #9ca3af;
 }
+
+@media (max-width: 768px) {
+  .ws-layout { grid-template-columns: 1fr; }
+  .ws-sidebar { display: none; }
+  .ws-main { padding: 20px 16px; }
+  .ws-stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .ws-header h1 { font-size: 20px; }
+  .ws-projects-grid { grid-template-columns: 1fr; }
+}

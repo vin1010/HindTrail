@@ -557,3 +557,35 @@
   color: var(--text);
   margin: 0;
 }
+
+.pd-mobile-back { display: none; }
+
+@media (max-width: 768px) {
+  .pd-layout { grid-template-columns: 1fr; }
+  .pd-sidebar { display: none; }
+  .pd-tree-panel { height: auto; min-height: 0; }
+  .pd-detail-panel { padding: 16px; }
+  .pd-tree-header { padding: 14px 14px 12px; }
+  .pd-tree-header h2 { font-size: 14px; }
+  .teams-overview { padding: 0; }
+  .teams-stats { gap: 8px; }
+  .teams-stat { padding: 10px 14px; min-width: 60px; }
+  .teams-connector { margin-left: 0; }
+  .teams-row { flex-direction: column; gap: 8px; }
+  .teams-role-label { width: auto; padding-top: 0; }
+  .teams-company-card { min-width: 0; width: 100%; }
+  .pd-mobile-hidden { display: none; }
+  .pd-mobile-back {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    color: var(--primary);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0 0 16px;
+    font-family: inherit;
+  }
+}

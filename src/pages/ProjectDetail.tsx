@@ -100,13 +100,14 @@ function TreeNode({
 }
 
 function ContractorGroup({
-  company, color, packages, selectedId, onSelect, getChildren,
+  company, color, packages, selectedId, onSelect, getChildren, defaultExpanded,
 }: {
   company: string; color: string; packages: WorkPackage[];
   selectedId: string | null; onSelect: (id: string) => void;
   getChildren: (parentId: string | null, projectId: string) => WorkPackage[];
+  defaultExpanded: boolean;
 }) {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(defaultExpanded);
   const total = packages.length;
   const inProgress = packages.filter((p) => p.status === "In Progress").length;
 
@@ -268,6 +269,7 @@ export default function ProjectDetail() {
   const { projects, packages, addPackage, getChildren, loadProjects, loadPackages } = useData();
   const [selectedPkg, setSelectedPkg] = useState<string | null>(null);
   const [showNewPkg, setShowNewPkg] = useState(false);
+  const [mobilePanel, setMobilePanel] = useState<"tree" | "detail">("tree");
 
   useEffect(() => {
     loadProjects();
@@ -355,7 +357,7 @@ export default function ProjectDetail() {
         </div>
       </aside>
 
-      <div className="pd-tree-panel">
+      <div className={`pd-tree-panel${mobilePanel === "detail" ? " pd-mobile-hidden" : ""}`}>
         <div className="pd-tree-header">
           <div>
             <span className="pd-proj-code">{project.code}</span>
@@ -379,15 +381,19 @@ export default function ProjectDetail() {
                 color={group.color}
                 packages={group.packages}
                 selectedId={selectedPkg}
-                onSelect={setSelectedPkg}
+                onSelect={(id) => { setSelectedPkg(id); setMobilePanel("detail"); }}
                 getChildren={getChildren}
+                defaultExpanded={contractorGroups.length <= 2}
               />
             ))
           )}
         </div>
       </div>
 
-      <div className="pd-detail-panel">
+      <div className={`pd-detail-panel${mobilePanel === "tree" && !selected ? " pd-mobile-hidden" : ""}`}>
+        <button className="pd-mobile-back" onClick={() => { setMobilePanel("tree"); setSelectedPkg(null); }}>
+          ← Back to packages
+        </button>
         {selected ? (
           <div className="pd-detail-content">
             <div className="pd-detail-header">
