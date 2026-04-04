@@ -43,6 +43,7 @@ export default function Workspace() {
         <nav className="ws-nav">
           <a className="active" onClick={() => navigate("/workspace")}><span className="ws-nav-icon">&#9632;</span> Dashboard</a>
           <a onClick={() => navigate("/projects")}><span className="ws-nav-icon">&#9645;</span> Projects</a>
+          <a onClick={() => navigate("/contractors")}><span className="ws-nav-icon">&#9829;</span> Contractors</a>
         </nav>
         <div className="ws-user">
           {user.memberships.length > 1 && (

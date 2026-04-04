@@ -117,3 +117,10 @@ export const comments = {
   create: (packageId: string, text: string) =>
     request<any>("/comments", { method: "POST", body: JSON.stringify({ packageId, text }) }),
 };
+
+// ─── Contractors ────────────────────────────────────────────────
+export const contractors = {
+  tree: () => request<any[]>("/contractors/tree"),
+  link: (childId: string, parentId: string) =>
+    request<any>("/contractors/link", { method: "POST", body: JSON.stringify({ childId, parentId }) }),
+};

@@ -97,6 +97,9 @@ export default function Projects() {
           <a className="active">
             <span className="ws-nav-icon">&#9645;</span> Projects
           </a>
+          <a onClick={() => navigate("/contractors")}>
+            <span className="ws-nav-icon">&#9829;</span> Contractors
+          </a>
         </nav>
         <div className="proj-user">
           <div className="ws-user-info">

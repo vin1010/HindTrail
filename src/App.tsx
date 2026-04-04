@@ -8,6 +8,7 @@ import Workspace from "./pages/Workspace";
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
 import WorkPackageDetail from "./pages/WorkPackageDetail";
+import Contractors from "./pages/Contractors";
 import type { ReactNode } from "react";
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -60,6 +61,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Projects />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/contractors"
+        element={
+          <ProtectedRoute>
+            <Contractors />
           </ProtectedRoute>
         }
       />
