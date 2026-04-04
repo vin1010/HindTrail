@@ -182,6 +182,296 @@
 .pkg-green { background: #ecfdf5; color: #047857; }
 .pkg-muted { background: #f3f4f6; color: #9ca3af; }
 
+/* Subcontractor inline label */
+.tree-sub-company {
+  display: block;
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 1px;
+}
+
+.tree-sub-group {
+  margin-top: 4px;
+}
+
+.tree-sub-group-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 12px;
+  font-size: 11px;
+}
+
+.tree-sub-arrow {
+  color: #9ca3af;
+  font-size: 13px;
+}
+
+.tree-sub-name {
+  font-weight: 600;
+  color: #374151;
+}
+
+.tree-sub-badge {
+  font-size: 10px;
+  font-weight: 600;
+  background: #fef3c7;
+  color: #92400e;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* Contractor groups */
+.contractor-group {
+  margin-bottom: 8px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: white;
+}
+
+.contractor-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  cursor: pointer;
+  background: #f9fafb;
+  transition: background 0.1s;
+}
+
+.contractor-group-header:hover {
+  background: #f3f4f6;
+}
+
+.contractor-group-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.contractor-color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.contractor-group-name {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.contractor-role-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  background: #ede9fe;
+  color: #5b21b6;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-top: 2px;
+}
+
+.contractor-group-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.contractor-pkg-count {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.contractor-active-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+}
+
+.contractor-toggle {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.contractor-group-body {
+  padding: 6px 4px;
+  background: #fafbfd;
+}
+
+/* Client badge in tree header */
+.pd-client-badge {
+  font-weight: 600;
+  color: #1d4ed8;
+  background: #eff6ff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+/* Teams overview */
+.teams-overview {
+  padding: 8px 0;
+  max-width: 620px;
+}
+
+.teams-header {
+  margin-bottom: 20px;
+}
+
+.teams-header h3 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+
+.teams-header p {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 0;
+}
+
+.teams-stats {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.teams-stat {
+  background: #f9fafb;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 20px;
+  text-align: center;
+  min-width: 80px;
+}
+
+.teams-stat-value {
+  display: block;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.teams-stat-label {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.teams-hierarchy {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-bottom: 24px;
+}
+
+.teams-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.teams-role-label {
+  width: 130px;
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+  padding-top: 14px;
+}
+
+.teams-company-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  flex: 1;
+}
+
+.teams-company-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: white;
+  border: 1px solid var(--border);
+  border-left: 4px solid #4f46e5;
+  border-radius: 10px;
+  padding: 10px 16px;
+  min-width: 200px;
+}
+
+.teams-client {
+  border-left-color: #1d4ed8;
+  background: #eff6ff;
+}
+
+.teams-subcontractor {
+  border-left-color: #d97706;
+}
+
+.teams-company-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: #4f46e5;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.teams-sub-icon {
+  background: #d97706;
+}
+
+.teams-company-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.teams-company-meta {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.teams-connector {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 8px 146px;
+}
+
+.teams-connector-line {
+  flex: 1;
+  height: 1px;
+  background: #e5e7eb;
+  max-width: 40px;
+}
+
+.teams-connector-label {
+  font-size: 11px;
+  color: #9ca3af;
+  white-space: nowrap;
+}
+
+.teams-hint {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0;
+}
+
 /* Detail panel */
 .pd-detail-panel {
   padding: 28px 32px;

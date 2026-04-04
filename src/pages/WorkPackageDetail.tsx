@@ -74,7 +74,7 @@ export default function WorkPackageDetail() {
       case "Activity": return <ActivityTab packageId={pkg!.id} />;
       case "Notes": return <NotesTab packageId={pkg!.id} />;
       case "Permissions": return <PermissionsTab packageId={pkg!.id} />;
-      case "Export Pack": return <ExportTab pkg={pkg!} />;
+      case "Export Pack": return <ExportTab pkg={pkg!} project={project!} />;
     }
   }
 

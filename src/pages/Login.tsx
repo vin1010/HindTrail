@@ -90,6 +90,40 @@ export default function Login() {
           </form>
         )}
 
+        <div className="login-test-accounts">
+          <div className="login-test-label">Test accounts</div>
+          <div className="login-test-btns">
+            <button
+              className="login-test-btn"
+              onClick={async () => {
+                try { setError(""); const next = await login("email", "vindy@roteq.co.za"); navigate(next === "onboarding" ? "/onboarding" : "/workspace"); }
+                catch (err: any) { setError(err.message || "Login failed"); }
+              }}
+              disabled={loading}
+            >
+              <span className="login-test-avatar" style={{ background: "#4f46e5" }}>V</span>
+              <div>
+                <div className="login-test-name">Vindy Sharma</div>
+                <div className="login-test-role">Roteq Engineering · Contractor</div>
+              </div>
+            </button>
+            <button
+              className="login-test-btn"
+              onClick={async () => {
+                try { setError(""); const next = await login("email", "john@glencore.com"); navigate(next === "onboarding" ? "/onboarding" : "/workspace"); }
+                catch (err: any) { setError(err.message || "Login failed"); }
+              }}
+              disabled={loading}
+            >
+              <span className="login-test-avatar" style={{ background: "#0891b2" }}>J</span>
+              <div>
+                <div className="login-test-name">John Smith</div>
+                <div className="login-test-role">Glencore Ltd · Client</div>
+              </div>
+            </button>
+          </div>
+        </div>
+
         <div className="login-footer">
           <a href="#">Terms</a><span className="dot">&middot;</span><a href="#">Privacy</a>
         </div>

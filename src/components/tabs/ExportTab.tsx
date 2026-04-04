@@ -1,8 +1,14 @@
+import { useState } from "react";
+import { pdf } from "@react-pdf/renderer";
+import { useAuth } from "../../context/AuthContext";
 import { useData } from "../../context/DataContext";
+import { HandoverPackPDF } from "./ExportPDF";
 import type { WorkPackage } from "../../data/mock";
 
-export default function ExportTab({ pkg }: { pkg: WorkPackage }) {
+export default function ExportTab({ pkg, project }: { pkg: WorkPackage; project: any }) {
+  const { user } = useAuth();
   const { documents, inspections, issues, approvals, activity } = useData();
+  const [exporting, setExporting] = useState(false);
 
   const docs = documents.filter((d) => d.packageId === pkg.id);
   const pkgInspections = inspections.filter((i) => i.packageId === pkg.id);
@@ -89,15 +95,34 @@ export default function ExportTab({ pkg }: { pkg: WorkPackage }) {
     return lines.join("\n");
   };
 
-  const handleExportPDF = () => {
-    const content = generateTextExport();
-    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${pkg.code}_Evidence_Pack.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+  const handleExportPDF = async () => {
+    setExporting(true);
+    try {
+      const activeCompany = user?.memberships.find((m) => m.id === user.activeCompanyId);
+      const generatedBy = `${user?.fullName} (${activeCompany?.name || "—"})`;
+
+      const blob = await pdf(
+        <HandoverPackPDF
+          pkg={pkg}
+          project={project}
+          documents={docs}
+          inspections={pkgInspections}
+          issues={pkgIssues}
+          approvals={pkgApprovals}
+          activity={pkgActivity}
+          generatedBy={generatedBy}
+        />
+      ).toBlob();
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${pkg.code}_Evidence_Pack.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setExporting(false);
+    }
   };
 
   const handleExportZIP = () => {
@@ -171,7 +196,9 @@ export default function ExportTab({ pkg }: { pkg: WorkPackage }) {
       </div>
 
       <div className="export-btns">
-        <button className="btn-primary" onClick={handleExportPDF}>Download Evidence Pack</button>
+        <button className="btn-primary" onClick={handleExportPDF} disabled={exporting}>
+          {exporting ? "Generating..." : "Download Evidence Pack"}
+        </button>
         <button className="btn-ghost" onClick={handleExportZIP}>Download Full Report</button>
       </div>
     </div>
