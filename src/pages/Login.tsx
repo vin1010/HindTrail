@@ -4,8 +4,9 @@ import { useAuth } from "../context/AuthContext";
 import "./Login.css";
 
 const TEST_ACCOUNTS = [
-  { email: "vindy@roteq.co.za", name: "Vindy Sharma", company: "Roteq Engineering", role: "Contractor", color: "#4f46e5" },
-  { email: "john@glencore.com", name: "John Smith", company: "Glencore Ltd", role: "Client", color: "#0891b2" },
+  { email: "emma@ironcrest.com", name: "Emma Collins", company: "Iron Crest Resources", role: "Client", color: "#0891b2" },
+  { email: "michael@vertex.com", name: "Michael Reed", company: "Vertex Industrial Services", role: "Contractor", color: "#4f46e5" },
+  { email: "mike@sub-engineering.com", name: "Mike Nkosi", company: "Sub-Engineering Solutions", role: "Subcontractor", color: "#059669" },
 ];
 
 export default function Login() {
