@@ -4,9 +4,10 @@ import { useAuth } from "../context/AuthContext";
 import "./Login.css";
 
 const TEST_ACCOUNTS = [
-  { email: "emma@ironcrest.com", name: "Emma Collins", company: "Iron Crest Resources", role: "Client", color: "#0891b2" },
-  { email: "michael@vertex.com", name: "Michael Reed", company: "Vertex Industrial Services", role: "Contractor", color: "#4f46e5" },
-  { email: "mike@sub-engineering.com", name: "Mike Nkosi", company: "Sub-Engineering Solutions", role: "Subcontractor", color: "#059669" },
+  { email: "asha.verma@cli-001.example", name: "Asha Verma", company: "Acme Mining Pty Ltd", role: "Client PM", color: "#0891b2" },
+  { email: "ethan.miller@con-001.example", name: "Ethan Miller", company: "IronBuild Construction", role: "Contractor PM", color: "#4f46e5" },
+  { email: "dylan.scott@sub-001.example", name: "Dylan Scott", company: "SkyScaff Services", role: "Sub Supervisor", color: "#059669" },
+  { email: "wei.zhang@ssub-001.example", name: "Wei Zhang", company: "WeldRight Mobile Welding", role: "Sub-sub Supervisor", color: "#b45309" },
 ];
 
 export default function Login() {
