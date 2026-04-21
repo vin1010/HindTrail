@@ -25,6 +25,15 @@ export interface Project {
   description: string;
 }
 
+export interface PackageRollup {
+  descendantCount: number;
+  openIssues: number;
+  pendingApprovals: number;
+  documentsCount: number;
+  inspectionsCount: number;
+  completionPct: number;
+}
+
 export interface WorkPackage {
   id: string;
   projectId: string;
@@ -37,6 +46,7 @@ export interface WorkPackage {
   dueDate: string;
   status: PackageStatus;
   description: string;
+  rollup?: PackageRollup | null;
 }
 
 export interface Document {

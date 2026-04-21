@@ -71,8 +71,13 @@ function NodeCard({
         </div>
 
         <div className="node-card-status-row">
-          <span className="node-status-dot" style={{ background: dotColor }} />
-          <span className="node-status-text">{pkg.status}</span>
+          <span
+            className="node-status-pill"
+            style={{ background: `${dotColor}1a`, color: dotColor }}
+          >
+            <span className="node-status-dot" style={{ background: dotColor }} />
+            {pkg.status}
+          </span>
           {pkg.responsible && (
             <span className="node-card-meta">{pkg.responsible}</span>
           )}
@@ -92,10 +97,32 @@ function NodeCard({
           </div>
         )}
 
+        {pkg.rollup && (pkg.rollup.openIssues > 0 || pkg.rollup.pendingApprovals > 0 || pkg.rollup.descendantCount > 0) && (
+          <div className="node-card-rollup">
+            {pkg.rollup.completionPct > 0 && (
+              <span className="node-rollup-pct" title="Completion across subtree">
+                {pkg.rollup.completionPct}% ready
+              </span>
+            )}
+            {pkg.rollup.openIssues > 0 && (
+              <span className="node-rollup-badge node-rollup-issue" title="Open issues across subtree">
+                {pkg.rollup.openIssues} issue{pkg.rollup.openIssues !== 1 ? "s" : ""}
+              </span>
+            )}
+            {pkg.rollup.pendingApprovals > 0 && (
+              <span className="node-rollup-badge node-rollup-pending" title="Pending approvals across subtree">
+                {pkg.rollup.pendingApprovals} pending
+              </span>
+            )}
+          </div>
+        )}
+
         <div className="node-card-footer">
           <div className="node-card-people">
             <span className="node-people-icon">👤</span>
-            <span className="node-people-count">–</span>
+            <span className="node-people-count">
+              {pkg.rollup ? pkg.rollup.descendantCount + 1 : 1}
+            </span>
           </div>
           {viewerRole === "prime" && (
             <button
