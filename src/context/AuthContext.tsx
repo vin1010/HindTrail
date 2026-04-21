@@ -31,8 +31,13 @@ const AuthContext = createContext<AuthState | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(() => {
-    const saved = sessionStorage.getItem("hindtrail_user");
-    return saved ? JSON.parse(saved) : null;
+    try {
+      const saved = sessionStorage.getItem("hindtrail_user");
+      return saved ? (JSON.parse(saved) as AuthUser) : null;
+    } catch {
+      sessionStorage.removeItem("hindtrail_user");
+      return null;
+    }
   });
   const [loading, setLoading] = useState(false);
 
