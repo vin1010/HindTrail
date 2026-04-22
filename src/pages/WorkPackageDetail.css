@@ -704,6 +704,121 @@
   gap: 10px;
 }
 
+/* ── Readiness banner ────────────────────────────── */
+.readiness-banner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: linear-gradient(135deg, #fff7ed 0%, #fef3c7 100%);
+  border: 1px solid #fcd34d;
+  border-radius: 14px;
+  padding: 16px 20px 20px;
+  margin: 16px 0 24px;
+  overflow: hidden;
+}
+
+.readiness-banner.readiness-ready {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border-color: #6ee7b7;
+}
+
+.readiness-score {
+  flex-shrink: 0;
+  text-align: center;
+  min-width: 72px;
+}
+
+.readiness-pct {
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1;
+  color: #b45309;
+  letter-spacing: -0.5px;
+}
+
+.readiness-ready .readiness-pct {
+  color: #047857;
+}
+
+.readiness-pct-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.readiness-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.readiness-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.readiness-meta {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 10px;
+}
+
+.readiness-blockers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.readiness-blocker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: white;
+  border: 1px solid #fcd34d;
+  color: #92400e;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.readiness-blocker:hover {
+  background: #fffbeb;
+  border-color: #f59e0b;
+}
+
+.readiness-arrow {
+  font-size: 14px;
+  opacity: 0.6;
+}
+
+.readiness-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.readiness-progress-fill {
+  height: 100%;
+  background: #f59e0b;
+  transition: width 0.3s;
+}
+
+.readiness-ready .readiness-progress-fill {
+  background: #10b981;
+}
+
 @media (max-width: 768px) {
   .wpd-layout { grid-template-columns: 1fr; }
   .wpd-sidebar { display: none; }
@@ -713,4 +828,6 @@
   .export-summary { grid-template-columns: repeat(2, 1fr); }
   .export-btns { flex-direction: column; }
   .tab-bar { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .readiness-banner { flex-direction: column; text-align: center; gap: 10px; }
+  .readiness-blockers { justify-content: center; }
 }

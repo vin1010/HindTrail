@@ -16,6 +16,52 @@ import "./WorkPackageDetail.css";
 const TABS = ["Overview", "Documents", "Inspections", "Issues", "Approvals", "Activity", "Notes", "Permissions", "Export Pack"] as const;
 type TabName = (typeof TABS)[number];
 
+function ReadinessBanner({ pkg, onJumpTo }: { pkg: any; onJumpTo: (tab: TabName) => void }) {
+  const r = pkg.rollup;
+  if (!r) return null;
+  const ready = r.completionPct >= 100 && r.openIssues === 0 && r.pendingApprovals === 0;
+  const blockers: { label: string; tab: TabName }[] = [];
+  if (r.openIssues > 0) blockers.push({ label: `${r.openIssues} open issue${r.openIssues !== 1 ? "s" : ""}`, tab: "Issues" });
+  if (r.pendingApprovals > 0) blockers.push({ label: `${r.pendingApprovals} pending approval${r.pendingApprovals !== 1 ? "s" : ""}`, tab: "Approvals" });
+  return (
+    <div className={`readiness-banner ${ready ? "readiness-ready" : "readiness-blocked"}`}>
+      <div className="readiness-score">
+        <div className="readiness-pct">{r.completionPct}%</div>
+        <div className="readiness-pct-label">ready</div>
+      </div>
+      <div className="readiness-body">
+        <div className="readiness-title">
+          {ready ? "Ready for handover" : blockers.length > 0 ? "Not yet ready" : "In progress"}
+        </div>
+        <div className="readiness-meta">
+          {r.descendantCount > 0 && (
+            <span>{r.descendantCount + 1} package{r.descendantCount > 0 ? "s" : ""} in scope · </span>
+          )}
+          <span>{r.documentsCount} doc{r.documentsCount !== 1 ? "s" : ""}</span>
+          <span> · {r.inspectionsCount} inspection{r.inspectionsCount !== 1 ? "s" : ""}</span>
+        </div>
+        {blockers.length > 0 && (
+          <div className="readiness-blockers">
+            {blockers.map((b) => (
+              <button
+                key={b.tab}
+                className="readiness-blocker"
+                onClick={() => onJumpTo(b.tab)}
+              >
+                {b.label}
+                <span className="readiness-arrow">→</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="readiness-progress">
+        <div className="readiness-progress-fill" style={{ width: `${r.completionPct}%` }} />
+      </div>
+    </div>
+  );
+}
+
 const STATUS_COLORS: Record<string, string> = {
   "Not Started": "pkg-grey", "In Progress": "pkg-blue",
   "Awaiting Approval": "pkg-yellow", "Ready for Handover": "pkg-green", Closed: "pkg-muted",
@@ -150,6 +196,8 @@ export default function WorkPackageDetail() {
             </div>
           </div>
         </div>
+
+        <ReadinessBanner pkg={pkg} onJumpTo={(tab) => setActiveTab(tab)} />
 
         <div className="wpd-tabs">
           {TABS.map((tab) => (
