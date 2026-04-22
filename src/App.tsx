@@ -10,6 +10,7 @@ import ProjectDetail from "./pages/ProjectDetail";
 import WorkPackageDetail from "./pages/WorkPackageDetail";
 import Contractors from "./pages/Contractors";
 import Help from "./pages/Help";
+import DemoSwitcher from "./components/DemoSwitcher";
 import type { ReactNode } from "react";
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -39,6 +40,8 @@ function OnboardingGuard({ children }: { children: ReactNode }) {
 
 function AppRoutes() {
   return (
+    <>
+    <DemoSwitcher />
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route
@@ -99,6 +102,7 @@ function AppRoutes() {
       />
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
+    </>
   );
 }
 
