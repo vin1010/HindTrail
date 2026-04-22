@@ -59,7 +59,7 @@ interface DataState {
 
   // Comment actions
   loadComments: (packageId: string) => Promise<void>;
-  addComment: (packageId: string, text: string) => Promise<void>;
+  addComment: (packageId: string, text: string, mentions?: string[]) => Promise<void>;
 
   // Helpers
   getChildren: (parentId: string | null, projectId: string) => WorkPackage[];
@@ -141,10 +141,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setComments(data);
   }, []);
 
-  const addComment = useCallback(async (packageId: string, text: string) => {
+  const addComment = useCallback(async (packageId: string, text: string, mentions: string[] = []) => {
     try {
-      const created = await api.comments.create(packageId, text);
-      setComments((prev) => [created, ...prev]);
+      const created = await api.comments.create(packageId, text, mentions);
+      setComments((prev) => [...prev, created]);
     } catch (err: any) {
       showToast(err.message || "Failed to post comment");
     }

@@ -116,8 +116,8 @@ export const members = {
 // ─── Comments ───────────────────────────────────────────────────
 export const comments = {
   list: (packageId: string) => request<any[]>(`/comments?packageId=${packageId}`),
-  create: (packageId: string, text: string) =>
-    request<any>("/comments", { method: "POST", body: JSON.stringify({ packageId, text }) }),
+  create: (packageId: string, text: string, mentions: string[] = []) =>
+    request<any>("/comments", { method: "POST", body: JSON.stringify({ packageId, text, mentions }) }),
 };
 
 // ─── Contractors ────────────────────────────────────────────────

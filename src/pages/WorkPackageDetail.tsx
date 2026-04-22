@@ -10,10 +10,10 @@ import ApprovalsTab from "../components/tabs/ApprovalsTab";
 import ActivityTab from "../components/tabs/ActivityTab";
 import PermissionsTab from "../components/tabs/PermissionsTab";
 import ExportTab from "../components/tabs/ExportTab";
-import NotesTab from "../components/tabs/NotesTab";
+import DiscussionTab from "../components/tabs/DiscussionTab";
 import "./WorkPackageDetail.css";
 
-const TABS = ["Overview", "Documents", "Inspections", "Issues", "Approvals", "Activity", "Notes", "Permissions", "Export Pack"] as const;
+const TABS = ["Overview", "Documents", "Inspections", "Issues", "Approvals", "Activity", "Discussion", "Permissions", "Export Pack"] as const;
 type TabName = (typeof TABS)[number];
 
 function ReadinessBanner({ pkg, onJumpTo }: { pkg: any; onJumpTo: (tab: TabName) => void }) {
@@ -145,7 +145,7 @@ export default function WorkPackageDetail() {
       case "Issues": return <IssuesTab packageId={pkg!.id} />;
       case "Approvals": return <ApprovalsTab packageId={pkg!.id} />;
       case "Activity": return <ActivityTab packageId={pkg!.id} />;
-      case "Notes": return <NotesTab packageId={pkg!.id} />;
+      case "Discussion": return <DiscussionTab packageId={pkg!.id} />;
       case "Permissions": return <PermissionsTab packageId={pkg!.id} />;
       case "Export Pack": return <ExportTab pkg={pkg!} project={project!} />;
     }
