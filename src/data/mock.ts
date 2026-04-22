@@ -72,6 +72,7 @@ export interface Inspection {
   inspector: string;
   result: InspectionResult;
   notes: string;
+  evidencePhotos?: string[];
 }
 
 export interface Issue {
